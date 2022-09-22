@@ -1,4 +1,7 @@
-import { useState, createContext, useContext, ReactNode } from "react";
+import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { useState, createContext, useContext, ReactNode, useEffect } from "react";
+import { rpcEndpoint } from ".";
+import { querySubmissions } from "./oracle";
 
 export interface VerifiedBeacon {
   readonly round: number;
@@ -22,14 +25,23 @@ const initialState: State = {
   beacons: new Map(),
 };
 
+interface Submission {
+  bot: string;
+  time: string;
+}
+
 interface Context {
   state: State;
+  submissions: Map<number, Submission[]>;
+  setClient: (client: CosmWasmClient) => void;
   addItems: (items: VerifiedBeacon[]) => void;
 }
 
 // create the context object for delivering your state across your app.
 export const GlobalContext = createContext<Context>({
   state: initialState,
+  submissions: new Map(),
+  setClient: () => {},
   addItems: () => {},
 });
 
@@ -40,6 +52,39 @@ interface Props {
 // custom component to provide the state to your app
 export const GlobalProvider = ({ children }: Props) => {
   const [globalState, setGlobalState] = useState(initialState);
+  const [clientInternal, setClientInternal] = useState<CosmWasmClient | null>(null);
+  const [submissions, setSubmissions] = useState<Map<number, Submission[]>>(new Map());
+
+  function setClient(client: CosmWasmClient) {
+    setClientInternal((old) => {
+      old?.disconnect();
+      return client;
+    });
+  }
+
+  useEffect(() => {
+    console.log("Connect client effect");
+    CosmWasmClient.connect(rpcEndpoint).then(
+      (client) => setClient(client),
+      (error) => console.error("Could not connect client", error),
+    );
+  }, []);
+
+  // Update statements
+  useEffect(() => {
+    console.log("Update statements effect");
+    if (!clientInternal) return;
+    for (const round of globalState.beacons.keys()) {
+      querySubmissions(clientInternal, round).then(
+        (queryResult) =>
+          setSubmissions((current) => {
+            current.set(round, queryResult.submissions);
+            return current;
+          }),
+        (err) => console.warn(err),
+      );
+    }
+  }, [clientInternal, globalState]);
 
   function addItems(items: VerifiedBeacon[]) {
     setGlobalState((current) => {
@@ -59,6 +104,8 @@ export const GlobalProvider = ({ children }: Props) => {
     <GlobalContext.Provider
       value={{
         state: globalState,
+        submissions,
+        setClient,
         addItems,
       }}
     >

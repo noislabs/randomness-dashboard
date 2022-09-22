@@ -8,7 +8,7 @@ export async function querySubmissions(client: CosmWasmClient, round: number) {
   const response = await client.queryContractSmart(noisOracleAddress, {
     submissions: { round: round },
   });
-  return response.submissions;
+  return response;
 }
 
 export function approxDateFromTimestamp(time: string): Date {
