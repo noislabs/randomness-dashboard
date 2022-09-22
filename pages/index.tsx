@@ -1,9 +1,72 @@
-import type { NextPage } from 'next'
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
+import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { assert } from "@cosmjs/utils";
+import type { NextPage } from "next";
+import Head from "next/head";
+import Image from "next/image";
+import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
+import styles from "../styles/Home.module.css";
+import { GlobalContext, VerifiedBeacon } from "./GlobalState";
+import { approxDateFromTimestamp, noisOracleAddress, querySubmissions } from "./oracle";
+
+assert(process.env.NEXT_PUBLIC_ENDPOINT, "NEXT_PUBLIC_ENDPOINT must be set");
+const rpcEndpoint = process.env.NEXT_PUBLIC_ENDPOINT;
+
+async function loadLatest(itemsPerPage: number, addItems: (items: VerifiedBeacon[]) => void) {
+  console.log("Running loadLatest() ...");
+
+  const client = await CosmWasmClient.connect(rpcEndpoint);
+
+  const request = {
+    beacons_desc: { start_after: null, limit: itemsPerPage },
+  };
+  console.log("Query request:", JSON.stringify(request));
+  const response = await client.queryContractSmart(noisOracleAddress, request);
+  for (const beacon of response.beacons) {
+    const { round, randomness, published, verified } = beacon;
+    const diff = Number(BigInt(verified) - BigInt(published)) / 1_000_000_000;
+    const verifiedBeacon: VerifiedBeacon = {
+      round: round,
+      randomness: randomness,
+      published: approxDateFromTimestamp(published),
+      verified: approxDateFromTimestamp(verified),
+      diff: diff,
+    };
+    addItems([verifiedBeacon]);
+  }
+
+  // Repeat but with small number of items
+  setTimeout(() => loadLatest(10, addItems), 9_000);
+}
+
+interface MissingBeacon {
+  readonly round: number;
+}
+
+type DisplayBeacon = VerifiedBeacon | MissingBeacon;
+
+function isVerifiedBeacon(beacon: DisplayBeacon): beacon is VerifiedBeacon {
+  return typeof (beacon as VerifiedBeacon).diff === "number";
+}
 
 const Home: NextPage = () => {
+  const { state, addItems } = useContext(GlobalContext);
+
+  useEffect(() => {
+    loadLatest(50, addItems);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [displayBeacons, setBeacons] = useState<DisplayBeacon[]>([]);
+  useEffect(() => {
+    let out = new Array<DisplayBeacon>();
+    for (let r = state.highest; r >= state.lowest; r -= 1) {
+      const found = state.beacons.get(r);
+      if (found) out.push(found);
+      else out.push({ round: r });
+    }
+    setBeacons(out);
+  }, [state]);
+
   return (
     <div className={styles.container}>
       <Head>
@@ -13,60 +76,35 @@ const Home: NextPage = () => {
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.tsx</code>
-        </p>
+        <h1 className={styles.title}>Nois Oracle</h1>
 
         <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+          {displayBeacons.map((beacon) => {
+            return (
+              <div key={beacon.round} className={styles.card}>
+                <h2>#{beacon.round}</h2>
+                {isVerifiedBeacon(beacon) ? (
+                  <>
+                    <p>
+                      <code>{beacon.randomness}</code>
+                    </p>
+                    <p>
+                      Published: {beacon.published.toUTCString()}, verified:{" "}
+                      {beacon.verified.toUTCString()}, diff: {beacon.diff.toFixed(2)}s
+                    </p>
+                  </>
+                ) : (
+                  <strong>missing!</strong>
+                )}
+              </div>
+            );
+          })}
         </div>
       </main>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
+      <footer className={styles.footer}>Make love</footer>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
