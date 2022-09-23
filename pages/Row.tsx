@@ -19,6 +19,7 @@ interface Props {
 
 export function Row({ beacon }: Props): JSX.Element {
   const [roundSubmissions, setRoundSubmissions] = useState<readonly Submission[]>([]);
+  const [loading, setLoading] = useState(false);
   const { submissions, getSubmissions } = useContext(GlobalContext);
 
   useEffect(() => {
@@ -26,11 +27,17 @@ export function Row({ beacon }: Props): JSX.Element {
     if (loaded) {
       setRoundSubmissions(loaded);
     } else {
-      getSubmissions(beacon.round).then(
-        (submissions) => setRoundSubmissions(submissions),
-        (err) => console.error(err),
-      );
+      if (!loading) {
+        setLoading(true);
+        getSubmissions(beacon.round)
+          .then(
+            (submissions) => setRoundSubmissions(submissions),
+            (err) => console.error(err),
+          )
+          .finally(() => setLoading(false));
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submissions, getSubmissions, beacon.round]);
 
   const diffDisplay = isVerifiedBeacon(beacon) ? `${beacon.diff.toFixed(2)}s` : null;
