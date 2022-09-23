@@ -1,7 +1,7 @@
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { rpcEndpoint } from ".";
-import { querySubmissions } from "./oracle";
+import { querySubmissions } from "./submissions";
 
 export interface VerifiedBeacon {
   readonly round: number;
@@ -32,9 +32,10 @@ interface Submission {
 
 interface Context {
   state: State;
-  submissions: Map<number, Submission[]>;
+  submissions: Map<number, readonly Submission[]>;
   setClient: (client: CosmWasmClient) => void;
   addItems: (items: VerifiedBeacon[]) => void;
+  getSubmissions: (round: number) => Promise<readonly Submission[]>;
 }
 
 // create the context object for delivering your state across your app.
@@ -43,6 +44,7 @@ export const GlobalContext = createContext<Context>({
   submissions: new Map(),
   setClient: () => {},
   addItems: () => {},
+  getSubmissions: (round) => Promise.resolve([]),
 });
 
 interface Props {
@@ -53,7 +55,7 @@ interface Props {
 export const GlobalProvider = ({ children }: Props) => {
   const [globalState, setGlobalState] = useState(initialState);
   const [clientInternal, setClientInternal] = useState<CosmWasmClient | null>(null);
-  const [submissions, setSubmissions] = useState<Map<number, Submission[]>>(new Map());
+  const [submissions, setSubmissions] = useState<Map<number, readonly Submission[]>>(new Map());
 
   function setClient(client: CosmWasmClient) {
     setClientInternal((old) => {
@@ -71,20 +73,20 @@ export const GlobalProvider = ({ children }: Props) => {
   }, []);
 
   // Update statements
-  useEffect(() => {
-    console.log("Update statements effect");
-    if (!clientInternal) return;
-    for (const round of globalState.beacons.keys()) {
-      querySubmissions(clientInternal, round).then(
-        (queryResult) =>
-          setSubmissions((current) => {
-            current.set(round, queryResult.submissions);
-            return current;
-          }),
-        (err) => console.warn(err),
-      );
-    }
-  }, [clientInternal, globalState]);
+  // useEffect(() => {
+  //   console.log("Update statements effect");
+  //   if (!clientInternal) return;
+  //   for (const round of globalState.beacons.keys()) {
+  //     querySubmissions(clientInternal, round).then(
+  //       (queryResult) =>
+  //         setSubmissions((current) => {
+  //           current.set(round, queryResult.submissions);
+  //           return current;
+  //         }),
+  //       (err) => console.warn(err),
+  //     );
+  //   }
+  // }, [clientInternal, globalState]);
 
   function addItems(items: VerifiedBeacon[]) {
     setGlobalState((current) => {
@@ -100,11 +102,25 @@ export const GlobalProvider = ({ children }: Props) => {
     });
   }
 
+  async function getSubmissions(round: number): Promise<readonly Submission[]> {
+    if (clientInternal) {
+      let { submissions } = await querySubmissions(clientInternal, round);
+      setSubmissions((current) => {
+        current.set(round, submissions);
+        return current;
+      });
+      return submissions;
+    } else {
+      return [];
+    }
+  }
+
   return (
     <GlobalContext.Provider
       value={{
         state: globalState,
-        submissions,
+        submissions: submissions,
+        getSubmissions,
         setClient,
         addItems,
       }}
