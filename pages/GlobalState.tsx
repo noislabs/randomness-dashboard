@@ -1,6 +1,8 @@
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { assert } from "console";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { rpcEndpoint } from ".";
+import { approxDateFromTimestamp, noisOracleAddress } from "./oracle";
 import { querySubmissions } from "./submissions";
 
 export interface VerifiedBeacon {
@@ -72,21 +74,39 @@ export const GlobalProvider = ({ children }: Props) => {
     );
   }, []);
 
-  // Update statements
-  // useEffect(() => {
-  //   console.log("Update statements effect");
-  //   if (!clientInternal) return;
-  //   for (const round of globalState.beacons.keys()) {
-  //     querySubmissions(clientInternal, round).then(
-  //       (queryResult) =>
-  //         setSubmissions((current) => {
-  //           current.set(round, queryResult.submissions);
-  //           return current;
-  //         }),
-  //       (err) => console.warn(err),
-  //     );
-  //   }
-  // }, [clientInternal, globalState]);
+  async function loadLatest(itemsPerPage: number) {
+    console.log("Running loadLatest() ...");
+    if (!clientInternal) {
+      console.log("No client yet");
+      return;
+    }
+
+    const request = {
+      beacons_desc: { start_after: null, limit: itemsPerPage },
+    };
+    console.log("Query request:", JSON.stringify(request));
+    const response = await clientInternal.queryContractSmart(noisOracleAddress, request);
+    for (const beacon of response.beacons) {
+      const { round, randomness, published, verified } = beacon;
+      const diff = Number(BigInt(verified) - BigInt(published)) / 1_000_000_000;
+      const verifiedBeacon: VerifiedBeacon = {
+        round: round,
+        randomness: randomness,
+        published: approxDateFromTimestamp(published),
+        verified: approxDateFromTimestamp(verified),
+        diff: diff,
+      };
+      addItems([verifiedBeacon]);
+    }
+
+    // Repeat but with small number of items
+    setTimeout(() => loadLatest(10), 9_000);
+  }
+
+  useEffect(() => {
+    loadLatest(60);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientInternal]);
 
   function addItems(items: VerifiedBeacon[]) {
     setGlobalState((current) => {
