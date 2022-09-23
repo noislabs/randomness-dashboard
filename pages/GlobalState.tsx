@@ -35,7 +35,6 @@ interface Submission {
 interface Context {
   state: State;
   submissions: Map<number, readonly Submission[]>;
-  setClient: (client: CosmWasmClient) => void;
   addItems: (items: VerifiedBeacon[]) => void;
   getSubmissions: (round: number) => Promise<readonly Submission[]>;
 }
@@ -44,7 +43,6 @@ interface Context {
 export const GlobalContext = createContext<Context>({
   state: initialState,
   submissions: new Map(),
-  setClient: () => {},
   addItems: () => {},
   getSubmissions: (round) => Promise.resolve([]),
 });
@@ -56,27 +54,21 @@ interface Props {
 // custom component to provide the state to your app
 export const GlobalProvider = ({ children }: Props) => {
   const [globalState, setGlobalState] = useState(initialState);
-  const [clientInternal, setClientInternal] = useState<CosmWasmClient | null>(null);
+  const [client, setClient] = useState<CosmWasmClient | null>(null);
   const [submissions, setSubmissions] = useState<Map<number, readonly Submission[]>>(new Map());
-
-  function setClient(client: CosmWasmClient) {
-    setClientInternal((old) => {
-      old?.disconnect();
-      return client;
-    });
-  }
 
   useEffect(() => {
     console.log("Connect client effect");
     CosmWasmClient.connect(rpcEndpoint).then(
-      (client) => setClient(client),
+      (c) => setClient(c),
       (error) => console.error("Could not connect client", error),
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadLatest(itemsPerPage: number) {
     console.log("Running loadLatest() ...");
-    if (!clientInternal) {
+    if (!client) {
       console.log("No client yet");
       return;
     }
@@ -85,7 +77,7 @@ export const GlobalProvider = ({ children }: Props) => {
       beacons_desc: { start_after: null, limit: itemsPerPage },
     };
     console.log("Query request:", JSON.stringify(request));
-    const response = await clientInternal.queryContractSmart(noisOracleAddress, request);
+    const response = await client.queryContractSmart(noisOracleAddress, request);
     for (const beacon of response.beacons) {
       const { round, randomness, published, verified } = beacon;
       const diff = Number(BigInt(verified) - BigInt(published)) / 1_000_000_000;
@@ -106,7 +98,7 @@ export const GlobalProvider = ({ children }: Props) => {
   useEffect(() => {
     loadLatest(60);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientInternal]);
+  }, [client]);
 
   function addItems(items: VerifiedBeacon[]) {
     setGlobalState((current) => {
@@ -123,8 +115,8 @@ export const GlobalProvider = ({ children }: Props) => {
   }
 
   async function getSubmissions(round: number): Promise<readonly Submission[]> {
-    if (clientInternal) {
-      let { submissions } = await querySubmissions(clientInternal, round);
+    if (client) {
+      let { submissions } = await querySubmissions(client, round);
       setSubmissions((current) => {
         current.set(round, submissions);
         return current;
@@ -141,7 +133,6 @@ export const GlobalProvider = ({ children }: Props) => {
         state: globalState,
         submissions: submissions,
         getSubmissions,
-        setClient,
         addItems,
       }}
     >
