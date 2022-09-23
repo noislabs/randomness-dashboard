@@ -48,21 +48,23 @@ const Home: NextPage = () => {
   }, [state]);
 
   return (
-    <>
+    <Container maxW="720px">
       {loading && (
-        <Stack>
-          <Skeleton height="20px" />
-          <Skeleton height="20px" />
-          <Skeleton height="20px" />
+        <Stack spacing="25px">
+          <Skeleton height="150px" />
+          <Skeleton height="150px" />
+          <Skeleton height="150px" />
+          <Skeleton height="150px" />
+          <Skeleton height="150px" />
         </Stack>
       )}
 
-      <VStack>
+      <VStack spacing="25px">
         {displayBeacons.map((beacon) => {
           return <Row key={beacon.round} beacon={beacon} />;
         })}
       </VStack>
-    </>
+    </Container>
   );
 };
 
