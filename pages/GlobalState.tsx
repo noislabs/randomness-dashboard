@@ -10,6 +10,7 @@ export interface VerifiedBeacon {
   readonly randomness: string;
   readonly published: Date;
   readonly verified: Date;
+  /** Diff between verified and published in seconds */
   readonly diff: number;
 }
 
@@ -80,12 +81,14 @@ export const GlobalProvider = ({ children }: Props) => {
     const response = await client.queryContractSmart(noisOracleAddress, request);
     for (const beacon of response.beacons) {
       const { round, randomness, published, verified } = beacon;
-      const diff = Number(BigInt(verified) - BigInt(published)) / 1_000_000_000;
+      const publishedDate = approxDateFromTimestamp(published);
+      const verifiedDate = approxDateFromTimestamp(verified);
+      const diff = (verifiedDate.getTime() - publishedDate.getTime()) / 1000;
       const verifiedBeacon: VerifiedBeacon = {
         round: round,
         randomness: randomness,
-        published: approxDateFromTimestamp(published),
-        verified: approxDateFromTimestamp(verified),
+        published: publishedDate,
+        verified: verifiedDate,
         diff: diff,
       };
       addItems([verifiedBeacon]);

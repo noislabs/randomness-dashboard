@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { useContext, useEffect, useState } from "react";
 import { GlobalContext, VerifiedBeacon } from "./GlobalState";
-import { Submission } from "./submissions";
+import { Submission, submissionDiff } from "./submissions";
 
 export interface MissingBeacon {
   readonly round: number;
@@ -80,9 +80,14 @@ export function Row({ beacon }: Props): JSX.Element {
               <br />
             </Text>
             <OrderedList>
-              {roundSubmissions.map((submission) => (
-                <ListItem key={submission.bot}>{submission.bot}</ListItem>
-              ))}
+              {roundSubmissions.map((submission) => {
+                const diff = submissionDiff(submission, beacon);
+                return (
+                  <ListItem key={submission.bot}>
+                    {submission.bot} ({diff.toFixed(2)}s)
+                  </ListItem>
+                );
+              })}
             </OrderedList>
           </>
         ) : (
