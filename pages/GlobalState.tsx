@@ -36,7 +36,7 @@ interface Submission {
 interface Context {
   state: State;
   submissions: Map<number, readonly Submission[]>;
-  addItems: (items: VerifiedBeacon[]) => void;
+  addBeacons: (beacons: VerifiedBeacon[]) => void;
   getSubmissions: (round: number) => Promise<readonly Submission[]>;
   getBotInfo: (address: string) => Promise<Bot | null>;
 }
@@ -45,7 +45,7 @@ interface Context {
 export const GlobalContext = createContext<Context>({
   state: initialState,
   submissions: new Map(),
-  addItems: () => {},
+  addBeacons: () => {},
   getSubmissions: (round) => Promise.resolve([]),
   getBotInfo: (address) => Promise.resolve(null),
 });
@@ -87,7 +87,7 @@ export const GlobalProvider = ({ children }: Props) => {
     };
     console.log("Query request:", JSON.stringify(request));
     const response = await client.queryContractSmart(noisOracleAddress, request);
-    for (const beacon of response.beacons) {
+    const verifiedBeacons = (response.beacons as Array<any>).map((beacon: any): VerifiedBeacon => {
       const { round, randomness, published, verified } = beacon;
       const publishedDate = approxDateFromTimestamp(published);
       const verifiedDate = approxDateFromTimestamp(verified);
@@ -99,9 +99,10 @@ export const GlobalProvider = ({ children }: Props) => {
         verified: verifiedDate,
         diff: diff,
       };
-      addItems([verifiedBeacon]);
-    }
-    return response.beacons.length;
+      return verifiedBeacon;
+    });
+    addBeacons(verifiedBeacons);
+    return verifiedBeacons.length;
   }
 
   useEffect(() => {
@@ -132,15 +133,15 @@ export const GlobalProvider = ({ children }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
 
-  function addItems(items: VerifiedBeacon[]) {
+  function addBeacons(beacons: readonly VerifiedBeacon[]) {
     setGlobalState((current) => {
-      const rounds = items.map((i) => i.round);
-      for (const item of items) {
-        current.beacons.set(item.round, item);
+      const addedRounds = beacons.map((b) => b.round);
+      for (const beacon of beacons) {
+        current.beacons.set(beacon.round, beacon);
       }
       return {
-        highest: Math.max(current.highest, ...rounds),
-        lowest: Math.min(current.lowest, ...rounds),
+        highest: Math.max(current.highest, ...addedRounds),
+        lowest: Math.min(current.lowest, ...addedRounds),
         beacons: current.beacons,
       };
     });
@@ -191,7 +192,7 @@ export const GlobalProvider = ({ children }: Props) => {
         submissions: submissions,
         getSubmissions,
         getBotInfo,
-        addItems,
+        addBeacons,
       }}
     >
       {children}
