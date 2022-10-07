@@ -65,6 +65,10 @@ export const GlobalProvider = ({ children }: Props) => {
   const [globalState, setGlobalState] = useState(initialState);
   const [client, setClient] = useState<CosmWasmClient | null>(null);
   const [submissions, setSubmissions] = useState<Map<number, readonly Submission[]>>(new Map());
+  // A map from address to registered bots. Uses Promises to be able to
+  // put pending requersts into a cache and do not send more queries then necessary.
+  const [botInfos, setBotInfos] = useState<Map<string, Promise<Bot | null>>>(new Map());
+  const [stopLoadingEnd, setStopLoadingEnd] = useState<boolean>(false);
 
   useEffect(() => {
     console.log("Connect client effect");
@@ -75,15 +79,11 @@ export const GlobalProvider = ({ children }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadLatest(itemsPerPage: number) {
-    console.log("Running loadLatest() ...");
-    if (!client) {
-      console.log("No client yet");
-      return;
-    }
-
+  // Loads a page and returns the number of results
+  async function loadPage(client: CosmWasmClient, startAfter: null | number, itemsPerPage: number): Promise<number> {
+    console.log(`Running loadPage(${startAfter}, ${itemsPerPage}) ...`);
     const request = {
-      beacons_desc: { start_after: null, limit: itemsPerPage },
+      beacons_desc: { start_after: startAfter, limit: itemsPerPage },
     };
     console.log("Query request:", JSON.stringify(request));
     const response = await client.queryContractSmart(noisOracleAddress, request);
@@ -101,13 +101,34 @@ export const GlobalProvider = ({ children }: Props) => {
       };
       addItems([verifiedBeacon]);
     }
-
-    // Repeat but with small number of items
-    setTimeout(() => loadLatest(10), 9_000);
+    return response.beacons.length;
   }
 
   useEffect(() => {
-    loadLatest(60);
+    if (!client) return;
+    if (stopLoadingEnd) return;
+    loadPage(client, globalState.lowest, 10).then(
+      (count) => {
+        if (count === 0) setStopLoadingEnd(true);
+        if (globalState.highest - globalState.lowest >= 60) {
+          setStopLoadingEnd(true);
+        }
+      },
+      (err) => console.error(err),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, globalState.lowest, stopLoadingEnd]);
+
+  function loadTopRecursive(client: CosmWasmClient) {
+    loadPage(client, null, 10);
+    // Repeat but with small number of items
+    setTimeout(() => loadTopRecursive(client), 9_000);
+  }
+
+  useEffect(() => {
+    if (!client) return;
+    // Start reload loop after initial load was done
+    setTimeout(() => loadTopRecursive(client), 9_000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
 
@@ -138,14 +159,28 @@ export const GlobalProvider = ({ children }: Props) => {
     }
   }
 
-  async function getBotInfo(address: string): Promise<Bot | null> {
+  function getBotInfo(address: string): Promise<Bot | null> {
+    // console.log("Requested", address);
+    const existing = botInfos.get(address);
+    if (typeof existing !== "undefined") {
+      console.log(`Found bot info for ${address}`);
+      return existing;
+    }
+
     if (client) {
-      const resp = await client.queryContractSmart(noisOracleAddress, { bot: { address } });
-      assert(typeof resp === "object");
-      assert(typeof resp.bot === "object"); // object can be null
-      return resp.bot;
+      const respPromise = client.queryContractSmart(noisOracleAddress, { bot: { address } });
+      const respPromiseMapped = respPromise.then((resp): Promise<Bot | null> => {
+        assert(typeof resp === "object");
+        assert(typeof resp.bot === "object"); // object can be null
+        return resp.bot;
+      });
+      setBotInfos((current) => {
+        current.set(address, respPromiseMapped);
+        return current;
+      });
+      return respPromise;
     } else {
-      return null;
+      return Promise.resolve(null);
     }
   }
 
