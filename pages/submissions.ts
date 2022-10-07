@@ -1,7 +1,7 @@
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { assert } from "@cosmjs/utils";
 import { VerifiedBeacon } from "./GlobalState";
-import { approxDateFromTimestamp, noisOracleAddress } from "./oracle";
+import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
 
 export interface Submission {
   readonly bot: string;
@@ -12,7 +12,7 @@ export async function querySubmissions(
   client: CosmWasmClient,
   round: number,
 ): Promise<{ submissions: ReadonlyArray<Submission> }> {
-  const response = await client.queryContractSmart(noisOracleAddress, {
+  const response = await queryOracleWith(client, {
     submissions: { round: round },
   });
   return response;

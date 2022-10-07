@@ -2,7 +2,7 @@ import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { assert } from "@cosmjs/utils";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { rpcEndpoint } from ".";
-import { approxDateFromTimestamp, noisOracleAddress } from "./oracle";
+import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
 import { querySubmissions } from "./submissions";
 
 export interface VerifiedBeacon {
@@ -85,8 +85,7 @@ export const GlobalProvider = ({ children }: Props) => {
     const request = {
       beacons_desc: { start_after: startAfter, limit: itemsPerPage },
     };
-    console.log("Query request:", JSON.stringify(request));
-    const response = await client.queryContractSmart(noisOracleAddress, request);
+    const response = await queryOracleWith(client, request);
     const verifiedBeacons = (response.beacons as Array<any>).map((beacon: any): VerifiedBeacon => {
       const { round, randomness, published, verified } = beacon;
       const publishedDate = approxDateFromTimestamp(published);
@@ -169,7 +168,7 @@ export const GlobalProvider = ({ children }: Props) => {
     }
 
     if (client) {
-      const respPromise = client.queryContractSmart(noisOracleAddress, { bot: { address } });
+      const respPromise = queryOracleWith(client, { bot: { address } });
       const respPromiseMapped = respPromise.then((resp): Promise<Bot | null> => {
         assert(typeof resp === "object");
         assert(typeof resp.bot === "object"); // object can be null
@@ -179,7 +178,7 @@ export const GlobalProvider = ({ children }: Props) => {
         current.set(address, respPromiseMapped);
         return current;
       });
-      return respPromise;
+      return respPromiseMapped;
     } else {
       return Promise.resolve(null);
     }
