@@ -79,7 +79,7 @@ export function Row({ beacon }: Props): JSX.Element {
     : "red.500";
 
   return (
-    <Flex alignItems="center" gap="2">
+    <Flex w="100%" alignItems="center" gap="2">
       <Square bg={color} size="90px" borderRadius="lg">
         <VStack>
           <Text>#{beacon.round}</Text>
