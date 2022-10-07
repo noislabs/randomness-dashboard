@@ -1,5 +1,5 @@
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
-import { assert } from "console";
+import { assert } from "@cosmjs/utils";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { rpcEndpoint } from ".";
 import { approxDateFromTimestamp, noisOracleAddress } from "./oracle";
@@ -38,6 +38,7 @@ interface Context {
   submissions: Map<number, readonly Submission[]>;
   addItems: (items: VerifiedBeacon[]) => void;
   getSubmissions: (round: number) => Promise<readonly Submission[]>;
+  getBotInfo: (address: string) => Promise<Bot | null>;
 }
 
 // create the context object for delivering your state across your app.
@@ -46,10 +47,17 @@ export const GlobalContext = createContext<Context>({
   submissions: new Map(),
   addItems: () => {},
   getSubmissions: (round) => Promise.resolve([]),
+  getBotInfo: (address) => Promise.resolve(null),
 });
 
 interface Props {
   children: ReactNode;
+}
+
+export interface Bot {
+  readonly moniker: string;
+  readonly address: string;
+  readonly rounds_added: number;
 }
 
 // custom component to provide the state to your app
@@ -130,12 +138,24 @@ export const GlobalProvider = ({ children }: Props) => {
     }
   }
 
+  async function getBotInfo(address: string): Promise<Bot | null> {
+    if (client) {
+      const resp = await client.queryContractSmart(noisOracleAddress, { bot: { address } });
+      assert(typeof resp === "object");
+      assert(typeof resp.bot === "object"); // object can be null
+      return resp.bot;
+    } else {
+      return null;
+    }
+  }
+
   return (
     <GlobalContext.Provider
       value={{
         state: globalState,
         submissions: submissions,
         getSubmissions,
+        getBotInfo,
         addItems,
       }}
     >

@@ -13,7 +13,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useContext, useEffect, useState } from "react";
-import { GlobalContext, VerifiedBeacon } from "./GlobalState";
+import { Bot, GlobalContext, VerifiedBeacon } from "./GlobalState";
 import { Submission, submissionDiff } from "./submissions";
 
 export interface MissingBeacon {
@@ -33,7 +33,25 @@ interface Props {
 export function Row({ beacon }: Props): JSX.Element {
   const [roundSubmissions, setRoundSubmissions] = useState<readonly Submission[]>([]);
   const [loading, setLoading] = useState(false);
-  const { submissions, getSubmissions } = useContext(GlobalContext);
+  const { submissions, getSubmissions, getBotInfo } = useContext(GlobalContext);
+  const [botInfos, setBotInfos] = useState<Map<string, Bot | null>>(new Map());
+
+  useEffect(() => {
+    for (const sub of roundSubmissions) {
+      const address = sub.bot;
+      getBotInfo(address).then(
+        (bot) => {
+          // console.log("Found bot", bot, "for", address);
+          setBotInfos((current) => {
+            current.set(address, bot);
+            return current;
+          });
+        },
+        (err) => console.error(err),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roundSubmissions]);
 
   useEffect(() => {
     const loaded = submissions.get(beacon.round);
@@ -82,9 +100,10 @@ export function Row({ beacon }: Props): JSX.Element {
             <OrderedList>
               {roundSubmissions.map((submission) => {
                 const diff = submissionDiff(submission, beacon);
+                const moniker = botInfos.get(submission.bot);
                 return (
                   <ListItem key={submission.bot}>
-                    {submission.bot} ({diff.toFixed(2)}s)
+                    {moniker?.moniker ?? submission.bot} ({diff.toFixed(2)}s)
                   </ListItem>
                 );
               })}
