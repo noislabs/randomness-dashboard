@@ -24,27 +24,22 @@ export function Row({ beacon }: Props): JSX.Element {
   const [botInfos, setBotInfos] = useState<Map<string, Bot | null>>(new Map());
 
   useEffect(() => {
-    if (!roundSubmissions) return;
-    for (const sub of roundSubmissions) {
-      const address = sub.bot;
-      getBotInfo(address).then(
-        (bot) => {
-          // console.log("Found bot", bot, "for", address);
-          setBotInfos((current) => {
-            current.set(address, bot);
-            return current;
-          });
-        },
-        (err) => console.error(err),
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roundSubmissions]);
-
-  useEffect(() => {
     if (roundSubmissions === null) {
       getSubmissions(beacon.round).then(
-        (submissions) => setRoundSubmissions(submissions),
+        (submissions) => {
+          const addresses = submissions.map(sub => sub.bot);
+          // Load bot infos later
+          setTimeout(() => {
+            (async () => {
+              const infos = await Promise.all(addresses.map(async (address) => {
+                const info = await getBotInfo(address);
+                return [address, info] as const;
+              }));
+              setBotInfos(new Map(infos));
+            })();
+          })
+          setRoundSubmissions(submissions);
+        },
         (err) => console.error(err),
       );
     }
