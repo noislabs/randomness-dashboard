@@ -47,7 +47,7 @@ const Home: NextPage = () => {
   }, [state]);
 
   return (
-    <Container maxW="720px">
+    <Container maxW="800px">
       {loading && (
         <Stack spacing="25px">
           <Skeleton height="150px" />

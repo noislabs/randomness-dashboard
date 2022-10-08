@@ -89,8 +89,8 @@ export function Row({ beacon }: Props): JSX.Element {
       <Box ml="3">
         {isVerifiedBeacon(beacon) ? (
           <>
-            <Text>Randomness</Text>
             <Text>
+              Randomness
               <Code>{beacon.randomness}</Code>
             </Text>
             <Text fontSize="sm">
