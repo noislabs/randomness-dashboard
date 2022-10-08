@@ -16,12 +16,11 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { assert } from "@cosmjs/utils";
 import type { NextPage } from "next";
 import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
-import { GlobalContext } from "./GlobalState";
-import { DisplayBeacon, Row } from "./Row";
+import { GlobalContext } from "../lib/GlobalState";
+import { DisplayBeacon, Row } from "../components/Row";
 
 assert(process.env.NEXT_PUBLIC_ENDPOINT, "NEXT_PUBLIC_ENDPOINT must be set");
 export const rpcEndpoint = process.env.NEXT_PUBLIC_ENDPOINT;

@@ -1,6 +1,6 @@
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
-import { GlobalProvider } from "./GlobalState";
+import { GlobalProvider } from "../lib/GlobalState";
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 
 const colors = {

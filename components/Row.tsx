@@ -13,8 +13,8 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useContext, useEffect, useState } from "react";
-import { Bot, GlobalContext, VerifiedBeacon } from "./GlobalState";
-import { Submission, submissionDiff } from "./submissions";
+import { Bot, GlobalContext, VerifiedBeacon } from "../lib/GlobalState";
+import { Submission, submissionDiff } from "../lib/submissions";
 
 export interface MissingBeacon {
   readonly round: number;

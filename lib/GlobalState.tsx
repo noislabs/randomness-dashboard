@@ -1,7 +1,7 @@
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { assert } from "@cosmjs/utils";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
-import { rpcEndpoint } from ".";
+import { rpcEndpoint } from "../pages";
 import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
 import { querySubmissions } from "./submissions";
 
@@ -80,7 +80,11 @@ export const GlobalProvider = ({ children }: Props) => {
   }, []);
 
   // Loads a page and returns the number of results
-  async function loadPage(client: CosmWasmClient, startAfter: null | number, itemsPerPage: number): Promise<number> {
+  async function loadPage(
+    client: CosmWasmClient,
+    startAfter: null | number,
+    itemsPerPage: number,
+  ): Promise<number> {
     console.log(`Running loadPage(${startAfter}, ${itemsPerPage}) ...`);
     const request = {
       beacons_desc: { start_after: startAfter, limit: itemsPerPage },
