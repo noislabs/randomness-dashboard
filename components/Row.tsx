@@ -1,17 +1,4 @@
-import {
-  Box,
-  Center,
-  Code,
-  Container,
-  Divider,
-  Flex,
-  ListItem,
-  OrderedList,
-  Spacer,
-  Square,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
+import { Badge, Box, Code, Flex, Heading, Spacer, Square, Text, VStack } from "@chakra-ui/react";
 import { useContext, useEffect, useState } from "react";
 import { Bot, GlobalContext, VerifiedBeacon } from "../lib/GlobalState";
 import { Submission, submissionDiff } from "../lib/submissions";
@@ -71,43 +58,47 @@ export function Row({ beacon }: Props): JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submissions, getSubmissions, beacon.round]);
 
-  const diffDisplay = isVerifiedBeacon(beacon) ? `${beacon.diff.toFixed(2)}s` : null;
-  const color = isVerifiedBeacon(beacon)
-    ? beacon.diff < 2
-      ? "green.500"
-      : "orange.500"
-    : "red.500";
-
+  const roundText = `#${beacon.round}`;
+  const split1 = roundText.slice(0, 4);
+  const split2 = roundText.slice(4);
   return (
     <Flex w="100%" alignItems="center" gap="2">
-      <Square bg={color} size="90px" borderRadius="lg">
+      <Square bg={"transparent"} size="100px" borderRadius="lg">
         <VStack>
-          <Text>#{beacon.round}</Text>
-          {diffDisplay && <Text>{diffDisplay}</Text>}
+          <Heading size="lg">
+            {split1}
+            <br />
+            {split2}
+          </Heading>
         </VStack>
       </Square>
-      <Box ml="3">
+      <Box marginLeft="0.5em">
         {isVerifiedBeacon(beacon) ? (
           <>
-            <Text>
-              Randomness
+            <Text marginBottom="0.5em">
+              Randomness published at {beacon.published.toUTCString()}:{" "}
               <Code>{beacon.randomness}</Code>
             </Text>
-            <Text fontSize="sm">
-              Published: {beacon.published.toUTCString()}, verified: {beacon.verified.toUTCString()}
-              <br />
-            </Text>
-            <OrderedList>
-              {roundSubmissions.map((submission) => {
+            <Text>
+              Submissions ({roundSubmissions.length}):{" "}
+              {roundSubmissions.map((submission, index) => {
                 const diff = submissionDiff(submission, beacon);
-                const moniker = botInfos.get(submission.bot);
+                const address = submission.bot;
+                const moniker = botInfos.get(submission.bot)?.moniker;
                 return (
-                  <ListItem key={submission.bot}>
-                    {moniker?.moniker ?? submission.bot} ({diff.toFixed(2)}s)
-                  </ListItem>
+                  <Badge
+                    key={submission.bot}
+                    marginInlineEnd="1"
+                    variant="outline"
+                    colorScheme="green"
+                    title={address}
+                  >
+                    {moniker ? <span title={address}>{moniker}</span> : <>{address}</>} (
+                    {diff.toFixed(1)}s)
+                  </Badge>
                 );
               })}
-            </OrderedList>
+            </Text>
           </>
         ) : (
           <Text>missing!</Text>
