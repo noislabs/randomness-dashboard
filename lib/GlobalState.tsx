@@ -35,7 +35,6 @@ interface Submission {
 
 interface Context {
   state: State;
-  submissions: Map<number, readonly Submission[]>;
   addBeacons: (beacons: VerifiedBeacon[]) => void;
   getSubmissions: (round: number) => Promise<readonly Submission[]>;
   getBotInfo: (address: string) => Promise<Bot | null>;
@@ -44,7 +43,6 @@ interface Context {
 // create the context object for delivering your state across your app.
 export const GlobalContext = createContext<Context>({
   state: initialState,
-  submissions: new Map(),
   addBeacons: () => {},
   getSubmissions: (round) => Promise.resolve([]),
   getBotInfo: (address) => Promise.resolve(null),
@@ -64,7 +62,9 @@ export interface Bot {
 export const GlobalProvider = ({ children }: Props) => {
   const [globalState, setGlobalState] = useState(initialState);
   const [client, setClient] = useState<CosmWasmClient | null>(null);
-  const [submissions, setSubmissions] = useState<Map<number, readonly Submission[]>>(new Map());
+  const [submissions, setSubmissions] = useState<Map<number, Promise<readonly Submission[]>>>(
+    new Map(),
+  );
   // A map from address to registered bots. Uses Promises to be able to
   // put pending requersts into a cache and do not send more queries then necessary.
   const [botInfos, setBotInfos] = useState<Map<string, Promise<Bot | null>>>(new Map());
@@ -151,15 +151,26 @@ export const GlobalProvider = ({ children }: Props) => {
   }
 
   async function getSubmissions(round: number): Promise<readonly Submission[]> {
+    const existing = submissions.get(round);
+    if (typeof existing !== "undefined") {
+      console.log(`Found submissions for #${round}`);
+      return existing;
+    }
+
     if (client) {
-      let { submissions } = await querySubmissions(client, round);
+      const respPromise = querySubmissions(client, round);
+      const respPromiseMapped = respPromise.then((resp) => {
+        assert(typeof resp === "object");
+        assert(typeof resp.submissions === "object"); // object can be null
+        return resp.submissions;
+      });
       setSubmissions((current) => {
-        current.set(round, submissions);
+        current.set(round, respPromiseMapped);
         return current;
       });
-      return submissions;
+      return respPromiseMapped;
     } else {
-      return [];
+      return Promise.resolve([]);
     }
   }
 
@@ -192,7 +203,6 @@ export const GlobalProvider = ({ children }: Props) => {
     <GlobalContext.Provider
       value={{
         state: globalState,
-        submissions: submissions,
         getSubmissions,
         getBotInfo,
         addBeacons,

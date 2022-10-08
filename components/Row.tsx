@@ -18,12 +18,13 @@ interface Props {
 }
 
 export function Row({ beacon }: Props): JSX.Element {
-  const [roundSubmissions, setRoundSubmissions] = useState<readonly Submission[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { submissions, getSubmissions, getBotInfo } = useContext(GlobalContext);
+  // roundSubmissions is null as long as submissions have not been loaded
+  const [roundSubmissions, setRoundSubmissions] = useState<readonly Submission[] | null>(null);
+  const { getSubmissions, getBotInfo } = useContext(GlobalContext);
   const [botInfos, setBotInfos] = useState<Map<string, Bot | null>>(new Map());
 
   useEffect(() => {
+    if (!roundSubmissions) return;
     for (const sub of roundSubmissions) {
       const address = sub.bot;
       getBotInfo(address).then(
@@ -41,22 +42,14 @@ export function Row({ beacon }: Props): JSX.Element {
   }, [roundSubmissions]);
 
   useEffect(() => {
-    const loaded = submissions.get(beacon.round);
-    if (loaded) {
-      setRoundSubmissions(loaded);
-    } else {
-      if (!loading) {
-        setLoading(true);
-        getSubmissions(beacon.round)
-          .then(
-            (submissions) => setRoundSubmissions(submissions),
-            (err) => console.error(err),
-          )
-          .finally(() => setLoading(false));
-      }
+    if (roundSubmissions === null) {
+      getSubmissions(beacon.round).then(
+        (submissions) => setRoundSubmissions(submissions),
+        (err) => console.error(err),
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submissions, getSubmissions, beacon.round]);
+  }, [roundSubmissions, getSubmissions, beacon.round]);
 
   const roundText = `#${beacon.round}`;
   const split1 = roundText.slice(0, 4);
@@ -80,8 +73,8 @@ export function Row({ beacon }: Props): JSX.Element {
               <Code>{beacon.randomness}</Code>
             </Text>
             <Text>
-              Submissions ({roundSubmissions.length}):{" "}
-              {roundSubmissions.map((submission, index) => {
+              Submissions ({roundSubmissions?.length ?? "–"}):{" "}
+              {(roundSubmissions ?? []).map((submission, index) => {
                 const diff = submissionDiff(submission, beacon);
                 const address = submission.bot;
                 const moniker = botInfos.get(submission.bot)?.moniker;
