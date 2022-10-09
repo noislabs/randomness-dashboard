@@ -1,7 +1,7 @@
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { assert } from "@cosmjs/utils";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
-import { rpcEndpoint } from "../pages";
+import { rpcEndpoint } from "./constants";
 import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
 import { querySubmissions } from "./submissions";
 

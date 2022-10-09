@@ -2,9 +2,21 @@ import {
   Avatar,
   Badge,
   Box,
+  Button,
   Code,
   Container,
+  Drawer,
+  DrawerBody,
+  DrawerCloseButton,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
   Flex,
+  FormLabel,
+  HStack,
+  IconButton,
+  Input,
   SimpleGrid,
   Skeleton,
   Spacer,
@@ -14,21 +26,24 @@ import {
   StatLabel,
   StatNumber,
   Text,
+  useDisclosure,
   VStack,
 } from "@chakra-ui/react";
+import { InfoIcon } from "@chakra-ui/icons";
 import { assert } from "@cosmjs/utils";
 import type { NextPage } from "next";
-import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
 import { GlobalContext } from "../lib/GlobalState";
 import { DisplayBeacon, Row } from "../components/Row";
-
-assert(process.env.NEXT_PUBLIC_ENDPOINT, "NEXT_PUBLIC_ENDPOINT must be set");
-export const rpcEndpoint = process.env.NEXT_PUBLIC_ENDPOINT;
+import { noisOracleAddress, rpcEndpoint } from "../lib/constants";
 
 const Home: NextPage = () => {
   const [loading, setLoading] = useState(false);
   const [displayBeacons, setBeacons] = useState<DisplayBeacon[]>([]);
   const { state } = useContext(GlobalContext);
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const btnRef = React.useRef(null);
 
   useEffect(() => {
     setLoading(true);
@@ -47,23 +62,62 @@ const Home: NextPage = () => {
   }, [state]);
 
   return (
-    <Container maxW="800px" paddingTop="25px" paddingBottom="25px">
-      {loading && (
-        <Stack spacing="25px">
-          <Skeleton height="150px" />
-          <Skeleton height="150px" />
-          <Skeleton height="150px" />
-          <Skeleton height="150px" />
-          <Skeleton height="150px" />
-        </Stack>
-      )}
+    <>
+      <HStack padding="20px" direction="row-reverse">
+        <Spacer />
+        <IconButton
+          colorScheme="gray"
+          aria-label="Info"
+          size="md"
+          icon={<InfoIcon />}
+          ref={btnRef}
+          onClick={onOpen}
+        />
+        <Drawer isOpen={isOpen} placement="right" onClose={onClose} finalFocusRef={btnRef}>
+          <DrawerOverlay />
+          <DrawerContent>
+            <DrawerCloseButton />
+            <DrawerHeader>Dashboard Info</DrawerHeader>
 
-      <VStack spacing="25px">
-        {displayBeacons.map((beacon) => {
-          return <Row key={beacon.round} beacon={beacon} />;
-        })}
-      </VStack>
-    </Container>
+            <DrawerBody>
+              <Stack spacing="24px">
+                <Box>
+                  <FormLabel htmlFor="rpcEndpoint">RPC endpoint</FormLabel>
+                  <Input id="rpcEndpoint" value={rpcEndpoint} readOnly={true} />
+                </Box>
+                <Box>
+                  <FormLabel htmlFor="noisOracleAddress">Oracle contract address</FormLabel>
+                  <Input id="noisOracleAddress" value={noisOracleAddress} readOnly={true} />
+                </Box>
+              </Stack>
+            </DrawerBody>
+
+            <DrawerFooter>
+              <Button variant="outline" mr={3} onClick={onClose}>
+                Okay
+              </Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      </HStack>
+      <Container maxW="800px" paddingTop="5px" paddingBottom="25px">
+        {loading && (
+          <Stack spacing="25px">
+            <Skeleton height="150px" />
+            <Skeleton height="150px" />
+            <Skeleton height="150px" />
+            <Skeleton height="150px" />
+            <Skeleton height="150px" />
+          </Stack>
+        )}
+
+        <VStack spacing="25px">
+          {displayBeacons.map((beacon) => {
+            return <Row key={beacon.round} beacon={beacon} />;
+          })}
+        </VStack>
+      </Container>
+    </>
   );
 };
 

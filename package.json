@@ -10,6 +10,7 @@
     "format": "prettier \"{components,lib,pages}/**/*.{js,ts,tsx,md}\" --write"
   },
   "dependencies": {
+    "@chakra-ui/icons": "^2.0.11",
     "@chakra-ui/react": "^2.3.4",
     "@cosmjs/cosmwasm-stargate": "^0.29.0",
     "@cosmjs/utils": "^0.29.0",

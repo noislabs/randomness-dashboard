@@ -1,8 +1,6 @@
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { assert } from "@cosmjs/utils";
-
-assert(process.env.NEXT_PUBLIC_NOIS_CONTRACT, "NEXT_PUBLIC_NOIS_CONTRACT must be set");
-const noisOracleAddress = process.env.NEXT_PUBLIC_NOIS_CONTRACT;
+import { noisOracleAddress } from "./constants";
 
 export async function queryOracleWith(client: CosmWasmClient, requestMsg: any) {
   console.log("Sending query:", JSON.stringify(requestMsg));
