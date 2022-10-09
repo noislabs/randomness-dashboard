@@ -28,17 +28,19 @@ export function Row({ beacon }: Props): JSX.Element {
     if (roundSubmissions === null) {
       getSubmissions(beacon.round).then(
         (submissions) => {
-          const addresses = submissions.map(sub => sub.bot);
+          const addresses = submissions.map((sub) => sub.bot);
           // Load bot infos later
           setTimeout(() => {
             (async () => {
-              const infos = await Promise.all(addresses.map(async (address) => {
-                const info = await getBotInfo(address);
-                return [address, info] as const;
-              }));
+              const infos = await Promise.all(
+                addresses.map(async (address) => {
+                  const info = await getBotInfo(address);
+                  return [address, info] as const;
+                }),
+              );
               setBotInfos(new Map(infos));
             })();
-          })
+          });
           setRoundSubmissions(submissions);
         },
         (err) => console.error(err),
