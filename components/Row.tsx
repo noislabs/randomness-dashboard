@@ -1,5 +1,6 @@
 import { Badge, Box, Code, Flex, Heading, Spacer, Square, Text, VStack } from "@chakra-ui/react";
 import { useContext, useEffect, useState } from "react";
+import { numberOfRewardedSubmissions } from "../lib/constants";
 import { Bot, GlobalContext, VerifiedBeacon } from "../lib/GlobalState";
 import { Submission, submissionDiff } from "../lib/submissions";
 
@@ -73,12 +74,13 @@ export function Row({ beacon }: Props): JSX.Element {
                 const diff = submissionDiff(submission, beacon);
                 const address = submission.bot;
                 const moniker = botInfos.get(submission.bot)?.moniker;
+                const color = index < numberOfRewardedSubmissions ? "green" : "gray";
                 return (
                   <Badge
                     key={submission.bot}
                     marginInlineEnd="1"
                     variant="outline"
-                    colorScheme="green"
+                    colorScheme={color}
                     title={address}
                   >
                     {moniker ? <span title={address}>{moniker}</span> : <>{address}</>} (

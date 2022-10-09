@@ -1,0 +1,1 @@
+export const numberOfRewardedSubmissions = 5;
