@@ -16,9 +16,11 @@ export function isVerifiedBeacon(beacon: DisplayBeacon): beacon is VerifiedBeaco
 
 interface Props {
   readonly beacon: DisplayBeacon;
+  readonly highlightedAddress: string | null;
+  readonly onHighlightAddress: (address: string | null) => void;
 }
 
-export function Row({ beacon }: Props): JSX.Element {
+export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): JSX.Element {
   // roundSubmissions is null as long as submissions have not been loaded
   const [roundSubmissions, setRoundSubmissions] = useState<readonly Submission[] | null>(null);
   const { getSubmissions, getBotInfo } = useContext(GlobalContext);
@@ -77,13 +79,16 @@ export function Row({ beacon }: Props): JSX.Element {
                 const address = submission.bot;
                 const moniker = botInfos.get(submission.bot)?.moniker;
                 const color = index < numberOfRewardedSubmissions ? "green" : "gray";
+                const highlighted = address === highlightedAddress;
                 return (
                   <Badge
                     key={submission.bot}
                     marginInlineEnd="1"
-                    variant="outline"
+                    variant={highlighted ? "solid" : "outline"}
                     colorScheme={color}
                     title={address}
+                    onClick={() => onHighlightAddress(highlighted ? null : address)}
+                    cursor="pointer"
                   >
                     {moniker ? <span title={address}>{moniker}</span> : <>{address}</>} (
                     {diff.toFixed(1)}s)

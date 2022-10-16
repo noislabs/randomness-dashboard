@@ -41,6 +41,7 @@ const Home: NextPage = () => {
   const [loading, setLoading] = useState(false);
   const [displayBeacons, setBeacons] = useState<DisplayBeacon[]>([]);
   const { state } = useContext(GlobalContext);
+  const [hightlighted, setHighlighted] = useState<string | null>(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = React.useRef(null);
@@ -113,7 +114,14 @@ const Home: NextPage = () => {
 
         <VStack spacing="25px">
           {displayBeacons.map((beacon) => {
-            return <Row key={beacon.round} beacon={beacon} />;
+            return (
+              <Row
+                key={beacon.round}
+                beacon={beacon}
+                highlightedAddress={hightlighted}
+                onHighlightAddress={setHighlighted}
+              />
+            );
           })}
         </VStack>
       </Container>
