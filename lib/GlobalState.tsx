@@ -1,6 +1,7 @@
 import { CosmWasmClient, setupWasmExtension, WasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
 import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
+import { HttpBatchClient } from "@cosmjs/tendermint-rpc/build/rpcclients";
 import { assert } from "@cosmjs/utils";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { rpcEndpoint } from "./constants";
@@ -79,7 +80,8 @@ export const GlobalProvider = ({ children }: Props) => {
     //   (c) => setClient(c),
     //   (error) => console.error("Could not connect client", error),
     // );
-    Tendermint34Client.connect(rpcEndpoint).then(
+    const httpBatch = new HttpBatchClient(rpcEndpoint, { batchSizeLimit: 10, dispatchInterval: 30 });
+    Tendermint34Client.create(httpBatch).then(
       (tmClient) => {
         const queryClient = QueryClient.withExtensions(tmClient, setupWasmExtension);
         setQueryClient(queryClient);
