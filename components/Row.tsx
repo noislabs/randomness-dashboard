@@ -23,33 +23,31 @@ interface Props {
 export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): JSX.Element {
   // roundSubmissions is null as long as submissions have not been loaded
   const [roundSubmissions, setRoundSubmissions] = useState<readonly Submission[] | null>(null);
-  const { getSubmissions, getBotInfo } = useContext(GlobalContext);
+  const { submissions, getSubmissions, getBotInfo } = useContext(GlobalContext);
   const [botInfos, setBotInfos] = useState<Map<string, Bot | null>>(new Map());
 
   useEffect(() => {
-    if (roundSubmissions === null) {
-      getSubmissions(beacon.round).then(
-        (submissions) => {
-          const addresses = submissions.map((sub) => sub.bot);
-          // Load bot infos later
-          setTimeout(() => {
-            (async () => {
-              const infos = await Promise.all(
-                addresses.map(async (address) => {
-                  const info = await getBotInfo(address);
-                  return [address, info] as const;
-                }),
-              );
-              setBotInfos(new Map(infos));
-            })();
-          });
-          setRoundSubmissions(submissions);
-        },
-        (err) => console.error(err),
-      );
-    }
+    getSubmissions(beacon.round).then(
+      (submissions) => {
+        const addresses = submissions.map((sub) => sub.bot);
+        // Load bot infos later
+        setTimeout(() => {
+          (async () => {
+            const infos = await Promise.all(
+              addresses.map(async (address) => {
+                const info = await getBotInfo(address);
+                return [address, info] as const;
+              }),
+            );
+            setBotInfos(new Map(infos));
+          })();
+        });
+        setRoundSubmissions(submissions);
+      },
+      (err) => console.error(err),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roundSubmissions, getSubmissions, beacon.round]);
+  }, [roundSubmissions, submissions, getSubmissions, beacon.round]);
 
   const roundText = `#${beacon.round}`;
   const split1 = roundText.slice(0, 4);

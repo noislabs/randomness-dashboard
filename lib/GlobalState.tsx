@@ -38,6 +38,7 @@ interface Submission {
 
 interface Context {
   state: State;
+  submissions: Map<number, Promise<readonly Submission[]>>;
   addBeacons: (beacons: VerifiedBeacon[]) => void;
   getSubmissions: (round: number) => Promise<readonly Submission[]>;
   getBotInfo: (address: string) => Promise<Bot | null>;
@@ -46,6 +47,7 @@ interface Context {
 // create the context object for delivering your state across your app.
 export const GlobalContext = createContext<Context>({
   state: initialState,
+  submissions: new Map(),
   addBeacons: () => {},
   getSubmissions: (round) => Promise.resolve([]),
   getBotInfo: (address) => Promise.resolve(null),
@@ -80,7 +82,10 @@ export const GlobalProvider = ({ children }: Props) => {
     //   (c) => setClient(c),
     //   (error) => console.error("Could not connect client", error),
     // );
-    const httpBatch = new HttpBatchClient(rpcEndpoint, { batchSizeLimit: 10, dispatchInterval: 30 });
+    const httpBatch = new HttpBatchClient(rpcEndpoint, {
+      batchSizeLimit: 10,
+      dispatchInterval: 30,
+    });
     Tendermint34Client.create(httpBatch).then(
       (tmClient) => {
         const queryClient = QueryClient.withExtensions(tmClient, setupWasmExtension);
@@ -170,27 +175,50 @@ export const GlobalProvider = ({ children }: Props) => {
     }
 
     if (queryClient) {
-      const respPromise = querySubmissions(queryClient, round);
-      const respPromiseMapped = respPromise.then((resp) => {
+      const respPromise = querySubmissions(queryClient, round).then((resp) => {
         assert(typeof resp === "object");
-        assert(typeof resp.submissions === "object"); // object can be null
+        assert(Array.isArray(resp.submissions));
         return resp.submissions;
       });
+
+      // Once resolved, schedule an update in 5 and 20 seconds
+      respPromise.then(() => {
+        setTimeout(() => updateSubmissions(round), 5_000);
+        setTimeout(() => updateSubmissions(round), 20_000);
+      });
+
       setSubmissions((current) => {
-        current.set(round, respPromiseMapped);
+        current.set(round, respPromise);
         return current;
       });
-      return respPromiseMapped;
+      return respPromise;
     } else {
       return Promise.resolve([]);
     }
+  }
+
+  async function updateSubmissions(round: number): Promise<void> {
+    if (!queryClient) return;
+
+    querySubmissions(queryClient, round)
+      .then((resp) => {
+        assert(typeof resp === "object");
+        assert(Array.isArray(resp.submissions));
+        return resp.submissions;
+      })
+      .then((updated) => {
+        setSubmissions((current) => {
+          current.set(round, Promise.resolve(updated));
+          return current;
+        });
+      });
   }
 
   function getBotInfo(address: string): Promise<Bot | null> {
     // console.log("Requested", address);
     const existing = botInfos.get(address);
     if (typeof existing !== "undefined") {
-      console.log(`Found bot info for ${address}`);
+      // console.log(`Found bot info for ${address}`);
       return existing;
     }
 
@@ -215,6 +243,7 @@ export const GlobalProvider = ({ children }: Props) => {
     <GlobalContext.Provider
       value={{
         state: globalState,
+        submissions,
         getSubmissions,
         getBotInfo,
         addBeacons,
