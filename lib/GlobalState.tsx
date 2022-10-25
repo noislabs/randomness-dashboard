@@ -1,4 +1,6 @@
-import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { CosmWasmClient, setupWasmExtension, WasmExtension } from "@cosmjs/cosmwasm-stargate";
+import { QueryClient } from "@cosmjs/stargate";
+import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
 import { assert } from "@cosmjs/utils";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { rpcEndpoint } from "./constants";
@@ -61,7 +63,8 @@ export interface Bot {
 // custom component to provide the state to your app
 export const GlobalProvider = ({ children }: Props) => {
   const [globalState, setGlobalState] = useState(initialState);
-  const [client, setClient] = useState<CosmWasmClient | null>(null);
+  // const [client, setClient] = useState<CosmWasmClient | null>(null);
+  const [queryClient, setQueryClient] = useState<(QueryClient & WasmExtension) | null>(null);
   const [submissions, setSubmissions] = useState<Map<number, Promise<readonly Submission[]>>>(
     new Map(),
   );
@@ -72,16 +75,23 @@ export const GlobalProvider = ({ children }: Props) => {
 
   useEffect(() => {
     console.log("Connect client effect");
-    CosmWasmClient.connect(rpcEndpoint).then(
-      (c) => setClient(c),
-      (error) => console.error("Could not connect client", error),
+    // CosmWasmClient.connect(rpcEndpoint).then(
+    //   (c) => setClient(c),
+    //   (error) => console.error("Could not connect client", error),
+    // );
+    Tendermint34Client.connect(rpcEndpoint).then(
+      (tmClient) => {
+        const queryClient = QueryClient.withExtensions(tmClient, setupWasmExtension);
+        setQueryClient(queryClient);
+      },
+      (error) => console.error("Could not connect tendermint client", error),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Loads a page and returns the number of results
   async function loadPage(
-    client: CosmWasmClient,
+    client: QueryClient & WasmExtension,
     startAfter: null | number,
     itemsPerPage: number,
   ): Promise<number> {
@@ -109,9 +119,9 @@ export const GlobalProvider = ({ children }: Props) => {
   }
 
   useEffect(() => {
-    if (!client) return;
+    if (!queryClient) return;
     if (stopLoadingEnd) return;
-    loadPage(client, globalState.lowest, 10).then(
+    loadPage(queryClient, globalState.lowest, 10).then(
       (count) => {
         if (count === 0) setStopLoadingEnd(true);
         if (globalState.highest - globalState.lowest >= 60) {
@@ -121,20 +131,20 @@ export const GlobalProvider = ({ children }: Props) => {
       (err) => console.error(err),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, globalState.lowest, stopLoadingEnd]);
+  }, [queryClient, globalState.lowest, stopLoadingEnd]);
 
-  function loadTopRecursive(client: CosmWasmClient) {
+  function loadTopRecursive(client: QueryClient & WasmExtension) {
     loadPage(client, null, 10);
     // Repeat but with small number of items
     setTimeout(() => loadTopRecursive(client), 9_000);
   }
 
   useEffect(() => {
-    if (!client) return;
+    if (!queryClient) return;
     // Start reload loop after initial load was done
-    setTimeout(() => loadTopRecursive(client), 9_000);
+    setTimeout(() => loadTopRecursive(queryClient), 9_000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client]);
+  }, [queryClient]);
 
   function addBeacons(beacons: readonly VerifiedBeacon[]) {
     setGlobalState((current) => {
@@ -157,8 +167,8 @@ export const GlobalProvider = ({ children }: Props) => {
       return existing;
     }
 
-    if (client) {
-      const respPromise = querySubmissions(client, round);
+    if (queryClient) {
+      const respPromise = querySubmissions(queryClient, round);
       const respPromiseMapped = respPromise.then((resp) => {
         assert(typeof resp === "object");
         assert(typeof resp.submissions === "object"); // object can be null
@@ -182,8 +192,8 @@ export const GlobalProvider = ({ children }: Props) => {
       return existing;
     }
 
-    if (client) {
-      const respPromise = queryOracleWith(client, { bot: { address } });
+    if (queryClient) {
+      const respPromise = queryOracleWith(queryClient, { bot: { address } });
       const respPromiseMapped = respPromise.then((resp): Promise<Bot | null> => {
         assert(typeof resp === "object");
         assert(typeof resp.bot === "object"); // object can be null

@@ -1,10 +1,11 @@
-import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { CosmWasmClient, WasmExtension } from "@cosmjs/cosmwasm-stargate";
+import { QueryClient } from "@cosmjs/stargate";
 import { assert } from "@cosmjs/utils";
 import { noisOracleAddress } from "./constants";
 
-export async function queryOracleWith(client: CosmWasmClient, requestMsg: any) {
+export async function queryOracleWith(client: QueryClient & WasmExtension, requestMsg: any) {
   console.log("Sending query:", JSON.stringify(requestMsg));
-  return client.queryContractSmart(noisOracleAddress, requestMsg);
+  return client.wasm.queryContractSmart(noisOracleAddress, requestMsg);
 }
 
 export function approxDateFromTimestamp(time: string): Date {

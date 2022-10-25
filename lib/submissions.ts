@@ -1,4 +1,5 @@
-import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { CosmWasmClient, WasmExtension } from "@cosmjs/cosmwasm-stargate";
+import { QueryClient } from "@cosmjs/stargate";
 import { assert } from "@cosmjs/utils";
 import { VerifiedBeacon } from "./GlobalState";
 import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
@@ -9,7 +10,7 @@ export interface Submission {
 }
 
 export async function querySubmissions(
-  client: CosmWasmClient,
+  client: QueryClient & WasmExtension,
   round: number,
 ): Promise<{ submissions: ReadonlyArray<Submission> }> {
   const response = await queryOracleWith(client, {
