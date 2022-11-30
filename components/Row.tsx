@@ -3,6 +3,11 @@ import { useContext, useEffect, useState } from "react";
 import { numberOfRewardedSubmissions } from "../lib/constants";
 import { Bot, GlobalContext, VerifiedBeacon } from "../lib/GlobalState";
 import { Submission, submissionDiff } from "../lib/submissions";
+import init,{_coinflip_js,_int_in_range_single_dice_js} from "nois"
+
+init().then(() => {
+  init();
+});
 
 export interface MissingBeacon {
   readonly round: number;
@@ -69,6 +74,10 @@ export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): 
             <Text marginBottom="0.5em">
               Randomness published at {beacon.published.toUTCString()}:{" "}
               <Code>{beacon.randomness}</Code>
+            </Text>
+            <Text marginBottom="0.5em">Coinflip: 
+            <Code>{_coinflip_js(beacon.randomness)}</Code>| 
+              Single Dice: <Code>{_int_in_range_single_dice_js(beacon.randomness)}</Code>|
             </Text>
             <Text>
               Submissions ({roundSubmissions?.length ?? "–"}):{" "}
