@@ -3,18 +3,10 @@ import { QueryClient } from "@cosmjs/stargate";
 import { Tendermint34Client, HttpBatchClient } from "@cosmjs/tendermint-rpc";
 import { assert } from "@cosmjs/utils";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
+import { queryBeacons, VerifiedBeacon } from "./beacons";
 import { rpcEndpoint } from "./constants";
 import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
 import { querySubmissions } from "./submissions";
-
-export interface VerifiedBeacon {
-  readonly round: number;
-  readonly randomness: string;
-  readonly published: Date;
-  readonly verified: Date;
-  /** Diff between verified and published in seconds */
-  readonly diff: number;
-}
 
 interface State {
   highest: number;
@@ -99,24 +91,7 @@ export const GlobalProvider = ({ children }: Props) => {
     itemsPerPage: number,
   ): Promise<number> {
     console.log(`Running loadPage(${startAfter}, ${itemsPerPage}) ...`);
-    const request = {
-      beacons_desc: { start_after: startAfter, limit: itemsPerPage },
-    };
-    const response = await queryOracleWith(client, request);
-    const verifiedBeacons = (response.beacons as Array<any>).map((beacon: any): VerifiedBeacon => {
-      const { round, randomness, published, verified } = beacon;
-      const publishedDate = approxDateFromTimestamp(published);
-      const verifiedDate = approxDateFromTimestamp(verified);
-      const diff = (verifiedDate.getTime() - publishedDate.getTime()) / 1000;
-      const verifiedBeacon: VerifiedBeacon = {
-        round: round,
-        randomness: randomness,
-        published: publishedDate,
-        verified: verifiedDate,
-        diff: diff,
-      };
-      return verifiedBeacon;
-    });
+    const verifiedBeacons = await queryBeacons(client, startAfter, itemsPerPage);
     addBeacons(verifiedBeacons);
     return verifiedBeacons.length;
   }

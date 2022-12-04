@@ -3,7 +3,9 @@ import { assert } from "@cosmjs/utils";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
-import { GlobalContext, VerifiedBeacon } from "../../lib/GlobalState";
+
+import { GlobalContext } from "../../lib/GlobalState";
+import { VerifiedBeacon } from "../../lib/beacons";
 
 const Round: NextPage = () => {
   const [loading, setLoading] = useState(false);
