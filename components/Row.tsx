@@ -1,5 +1,6 @@
 import { Badge, Box, Code, Flex, Heading, Spacer, Square, Text, VStack } from "@chakra-ui/react";
 import { useContext, useEffect, useState } from "react";
+import Link from "next/link";
 import { numberOfRewardedSubmissions } from "../lib/constants";
 import { Bot, GlobalContext, VerifiedBeacon } from "../lib/GlobalState";
 import { Submission, submissionDiff } from "../lib/submissions";
@@ -57,9 +58,11 @@ export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): 
       <Square bg={"transparent"} size="100px" borderRadius="lg">
         <VStack>
           <Heading size="lg">
-            {split1}
-            <br />
-            {split2}
+            <Link href={`/rounds/${beacon.round}`}>
+              {split1}
+              <br />
+              {split2}
+            </Link>
           </Heading>
         </VStack>
       </Square>
