@@ -36,6 +36,7 @@ import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from
 import { GlobalContext } from "../lib/GlobalState";
 import { DisplayBeacon, Row } from "../components/Row";
 import { noisOracleAddress, rpcEndpoint } from "../lib/constants";
+import { Rows } from "../components/Rows";
 
 const Home: NextPage = () => {
   const [loading, setLoading] = useState(false);
@@ -113,16 +114,11 @@ const Home: NextPage = () => {
         )}
 
         <VStack spacing="25px">
-          {displayBeacons.map((beacon) => {
-            return (
-              <Row
-                key={beacon.round}
-                beacon={beacon}
-                highlightedAddress={hightlighted}
-                onHighlightAddress={setHighlighted}
-              />
-            );
-          })}
+          <Rows
+            beacons={displayBeacons}
+            highlightedAddress={hightlighted}
+            onHighlightAddress={setHighlighted}
+          />
         </VStack>
       </Container>
     </>
