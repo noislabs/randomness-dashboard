@@ -35,3 +35,27 @@ export async function queryBeacons(
     return verifiedBeacon;
   });
 }
+
+export async function queryBeacon(
+  client: QueryClient & WasmExtension,
+  round: number,
+): Promise<VerifiedBeacon | null> {
+  const response: { beacon: any } = await queryOracleWith(client, { beacon: { round } });
+
+  if (response.beacon) {
+    const { round, randomness, published, verified } = response.beacon;
+    const publishedDate = approxDateFromTimestamp(published);
+    const verifiedDate = approxDateFromTimestamp(verified);
+    const diff = (verifiedDate.getTime() - publishedDate.getTime()) / 1000;
+    let verifiedBeacon: VerifiedBeacon = {
+      round: round,
+      randomness: randomness,
+      published: publishedDate,
+      verified: verifiedDate,
+      diff: diff,
+    };
+    return verifiedBeacon;
+  } else {
+    return null;
+  }
+}
