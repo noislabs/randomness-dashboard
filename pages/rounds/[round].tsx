@@ -52,15 +52,13 @@ const Round: NextPage = () => {
       <Head>
         <title>Nois Oracle Round #{round}</title>
       </Head>
-
+      <HStack padding="20px" direction="row">
+        <Link href="/">
+          <IconButton colorScheme="gray" aria-label="Home" size="md" icon={<FaHome />} />
+        </Link>
+        <Spacer />
+      </HStack>
       <Container maxW="800px" paddingTop="5px" paddingBottom="25px">
-        <HStack paddingTop="20px" paddingBottom="20px" direction="row">
-          <Link href="/">
-            <IconButton colorScheme="gray" aria-label="Home" size="md" icon={<FaHome />} />
-          </Link>
-          <Spacer />
-        </HStack>
-
         {loading && (
           <Stack spacing="25px">
             <Skeleton height="150px" />
