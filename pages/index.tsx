@@ -29,10 +29,11 @@ import {
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
-import { InfoIcon } from "@chakra-ui/icons";
 import { assert } from "@cosmjs/utils";
 import type { NextPage } from "next";
 import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
+import { FaInfoCircle } from "react-icons/fa";
+
 import { GlobalContext } from "../lib/GlobalState";
 import { DisplayBeacon, Row } from "../components/Row";
 import { noisOracleAddress, rpcEndpoint } from "../lib/constants";
@@ -71,7 +72,7 @@ const Home: NextPage = () => {
           colorScheme="gray"
           aria-label="Info"
           size="md"
-          icon={<InfoIcon />}
+          icon={<FaInfoCircle />}
           ref={btnRef}
           onClick={onOpen}
         />

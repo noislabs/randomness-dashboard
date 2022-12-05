@@ -12,8 +12,8 @@ import {
 import { assert } from "@cosmjs/utils";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { ArrowBackIcon } from "@chakra-ui/icons";
 import { useContext, useEffect, useState } from "react";
+import { FaHome } from "react-icons/fa";
 
 import { GlobalContext } from "../../lib/GlobalState";
 import { VerifiedBeacon } from "../../lib/beacons";
@@ -50,12 +50,7 @@ const Round: NextPage = () => {
     <Container maxW="800px" paddingTop="5px" paddingBottom="25px">
       <HStack paddingTop="20px" paddingBottom="20px" direction="row">
         <Link href="/">
-          <IconButton
-            colorScheme="gray"
-            aria-label="Home"
-            size="md"
-            icon={<ArrowBackIcon />}
-          />
+          <IconButton colorScheme="gray" aria-label="Home" size="md" icon={<FaHome />} />
         </Link>
         <Spacer />
       </HStack>
