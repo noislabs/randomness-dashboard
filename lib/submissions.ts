@@ -1,7 +1,6 @@
 import { CosmWasmClient, WasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
-import { assert } from "@cosmjs/utils";
-import { VerifiedBeacon } from "./GlobalState";
+import { VerifiedBeacon } from "./beacons";
 import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
 
 export interface Submission {

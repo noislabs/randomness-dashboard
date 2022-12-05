@@ -3,18 +3,10 @@ import { QueryClient } from "@cosmjs/stargate";
 import { Tendermint34Client, HttpBatchClient } from "@cosmjs/tendermint-rpc";
 import { assert } from "@cosmjs/utils";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
+import { queryBeacon, queryBeacons, VerifiedBeacon } from "./beacons";
 import { rpcEndpoint } from "./constants";
 import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
 import { querySubmissions } from "./submissions";
-
-export interface VerifiedBeacon {
-  readonly round: number;
-  readonly randomness: string;
-  readonly published: Date;
-  readonly verified: Date;
-  /** Diff between verified and published in seconds */
-  readonly diff: number;
-}
 
 interface State {
   highest: number;
@@ -37,19 +29,23 @@ interface Submission {
 
 interface Context {
   state: State;
+  ready: boolean;
   submissions: Map<number, Promise<readonly Submission[]>>;
-  addBeacons: (beacons: VerifiedBeacon[]) => void;
   getSubmissions: (round: number) => Promise<readonly Submission[]>;
   getBotInfo: (address: string) => Promise<Bot | null>;
+  getBeacon: (round: number) => Promise<VerifiedBeacon | null>;
+  addBeacons: (beacons: VerifiedBeacon[]) => void;
 }
 
 // create the context object for delivering your state across your app.
 export const GlobalContext = createContext<Context>({
   state: initialState,
+  ready: false,
   submissions: new Map(),
-  addBeacons: () => {},
   getSubmissions: (round) => Promise.resolve([]),
   getBotInfo: (address) => Promise.resolve(null),
+  getBeacon: (round) => Promise.resolve(null),
+  addBeacons: () => {},
 });
 
 interface Props {
@@ -67,6 +63,7 @@ export const GlobalProvider = ({ children }: Props) => {
   const [globalState, setGlobalState] = useState(initialState);
   // const [client, setClient] = useState<CosmWasmClient | null>(null);
   const [queryClient, setQueryClient] = useState<(QueryClient & WasmExtension) | null>(null);
+  const [ready, setReady] = useState(false);
   const [submissions, setSubmissions] = useState<Map<number, Promise<readonly Submission[]>>>(
     new Map(),
   );
@@ -86,6 +83,7 @@ export const GlobalProvider = ({ children }: Props) => {
       (tmClient) => {
         const queryClient = QueryClient.withExtensions(tmClient, setupWasmExtension);
         setQueryClient(queryClient);
+        setReady(true);
       },
       (error) => console.error("Could not connect tendermint client", error),
     );
@@ -99,24 +97,7 @@ export const GlobalProvider = ({ children }: Props) => {
     itemsPerPage: number,
   ): Promise<number> {
     console.log(`Running loadPage(${startAfter}, ${itemsPerPage}) ...`);
-    const request = {
-      beacons_desc: { start_after: startAfter, limit: itemsPerPage },
-    };
-    const response = await queryOracleWith(client, request);
-    const verifiedBeacons = (response.beacons as Array<any>).map((beacon: any): VerifiedBeacon => {
-      const { round, randomness, published, verified } = beacon;
-      const publishedDate = approxDateFromTimestamp(published);
-      const verifiedDate = approxDateFromTimestamp(verified);
-      const diff = (verifiedDate.getTime() - publishedDate.getTime()) / 1000;
-      const verifiedBeacon: VerifiedBeacon = {
-        round: round,
-        randomness: randomness,
-        published: publishedDate,
-        verified: verifiedDate,
-        diff: diff,
-      };
-      return verifiedBeacon;
-    });
+    const verifiedBeacons = await queryBeacons(client, startAfter, itemsPerPage);
     addBeacons(verifiedBeacons);
     return verifiedBeacons.length;
   }
@@ -148,6 +129,25 @@ export const GlobalProvider = ({ children }: Props) => {
     setTimeout(() => loadTopRecursive(queryClient), 9_000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryClient]);
+
+  async function getBeacon(round: number): Promise<VerifiedBeacon | null> {
+    const existing = globalState.beacons.get(round);
+    if (typeof existing !== "undefined") {
+      console.log(`Found beacon for #${round}`);
+      return existing;
+    }
+
+    if (queryClient) {
+      const response = await queryBeacon(queryClient, round);
+      if (response) {
+        addBeacons([response]);
+      }
+      return response;
+    } else {
+      console.warn("queryClient not set");
+      return Promise.resolve(null);
+    }
+  }
 
   function addBeacons(beacons: readonly VerifiedBeacon[]) {
     setGlobalState((current) => {
@@ -239,9 +239,11 @@ export const GlobalProvider = ({ children }: Props) => {
     <GlobalContext.Provider
       value={{
         state: globalState,
+        ready,
         submissions,
         getSubmissions,
         getBotInfo,
+        getBeacon,
         addBeacons,
       }}
     >
