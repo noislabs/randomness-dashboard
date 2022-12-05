@@ -11,6 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { assert } from "@cosmjs/utils";
 import { NextPage } from "next";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
 import { FaHome } from "react-icons/fa";
@@ -47,39 +48,45 @@ const Round: NextPage = () => {
   }, [ready]);
 
   return (
-    <Container maxW="800px" paddingTop="5px" paddingBottom="25px">
-      <HStack paddingTop="20px" paddingBottom="20px" direction="row">
-        <Link href="/">
-          <IconButton colorScheme="gray" aria-label="Home" size="md" icon={<FaHome />} />
-        </Link>
-        <Spacer />
-      </HStack>
+    <>
+      <Head>
+        <title>Nois Oracle Round #{round}</title>
+      </Head>
 
-      {loading && (
-        <Stack spacing="25px">
-          <Skeleton height="150px" />
-          <Skeleton height="150px" />
-          <Skeleton height="150px" />
-          <Skeleton height="150px" />
-          <Skeleton height="150px" />
-        </Stack>
-      )}
+      <Container maxW="800px" paddingTop="5px" paddingBottom="25px">
+        <HStack paddingTop="20px" paddingBottom="20px" direction="row">
+          <Link href="/">
+            <IconButton colorScheme="gray" aria-label="Home" size="md" icon={<FaHome />} />
+          </Link>
+          <Spacer />
+        </HStack>
 
-      <Stack>
-        <Heading size="lg">Round #{round}</Heading>
-        {beacon ? (
-          <Text>
-            Published: {beacon.published.toUTCString()}
-            <br />
-            Verified: {beacon.verified.toUTCString()} ({beacon.diff.toFixed(1)}s)
-            <br />
-            <Code>{beacon.randomness}</Code>
-          </Text>
-        ) : (
-          <Text>Not found</Text>
+        {loading && (
+          <Stack spacing="25px">
+            <Skeleton height="150px" />
+            <Skeleton height="150px" />
+            <Skeleton height="150px" />
+            <Skeleton height="150px" />
+            <Skeleton height="150px" />
+          </Stack>
         )}
-      </Stack>
-    </Container>
+
+        <Stack>
+          <Heading size="lg">Round #{round}</Heading>
+          {beacon ? (
+            <Text>
+              Published: {beacon.published.toUTCString()}
+              <br />
+              Verified: {beacon.verified.toUTCString()} ({beacon.diff.toFixed(1)}s)
+              <br />
+              <Code>{beacon.randomness}</Code>
+            </Text>
+          ) : (
+            <Text>Not found</Text>
+          )}
+        </Stack>
+      </Container>
+    </>
   );
 };
 

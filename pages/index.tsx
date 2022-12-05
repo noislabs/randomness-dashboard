@@ -29,7 +29,7 @@ import {
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
-import { assert } from "@cosmjs/utils";
+import Head from "next/head";
 import type { NextPage } from "next";
 import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
 import { FaInfoCircle } from "react-icons/fa";
@@ -66,6 +66,9 @@ const Home: NextPage = () => {
 
   return (
     <>
+      <Head>
+        <title>Nois Randomness Dashboard</title>
+      </Head>
       <HStack padding="20px" direction="row-reverse">
         <Spacer />
         <IconButton
