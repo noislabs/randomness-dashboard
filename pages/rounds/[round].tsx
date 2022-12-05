@@ -65,8 +65,8 @@ const Round: NextPage = () => {
         </Stack>
       )}
 
-      <Heading size="lg">Round #{round}</Heading>
-      <div>
+      <Stack>
+        <Heading size="lg">Round #{round}</Heading>
         {beacon ? (
           <Text>
             Published: {beacon.published.toUTCString()}
@@ -76,9 +76,9 @@ const Round: NextPage = () => {
             <Code>{beacon.randomness}</Code>
           </Text>
         ) : (
-          <>Not found</>
+          <Text>Not found</Text>
         )}
-      </div>
+      </Stack>
     </Container>
   );
 };
