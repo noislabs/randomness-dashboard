@@ -12,27 +12,21 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
-  Flex,
   FormLabel,
   HStack,
   IconButton,
   Input,
-  SimpleGrid,
   Skeleton,
   Spacer,
-  Square,
   Stack,
-  Stat,
-  StatLabel,
-  StatNumber,
-  Text,
   useDisclosure,
   VStack,
 } from "@chakra-ui/react";
 import Head from "next/head";
 import type { NextPage } from "next";
-import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { FaInfoCircle } from "react-icons/fa";
+import { useRouter } from "next/router";
 
 import { GlobalContext } from "../lib/GlobalState";
 import { DisplayBeacon, Row } from "../components/Row";
@@ -40,6 +34,7 @@ import { noisOracleAddress, rpcEndpoint } from "../lib/constants";
 import { Rows } from "../components/Rows";
 
 const Home: NextPage = () => {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [displayBeacons, setBeacons] = useState<DisplayBeacon[]>([]);
   const { state } = useContext(GlobalContext);
@@ -50,7 +45,6 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     setLoading(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -63,6 +57,17 @@ const Home: NextPage = () => {
     if (out.length !== 0) setLoading(false);
     setBeacons(out);
   }, [state]);
+
+  useEffect(() => {
+    const h = typeof router.query.highlighted === "string" ? router.query.highlighted : null;
+    setHighlighted(h);
+  }, [router.query.highlighted]);
+
+  function setHighlightedAndUpdateUrl(address: string | null) {
+    setHighlighted(address);
+    const href = address ? `/?highlighted=${address}` : `/`;
+    router.push(href, href, { shallow: true });
+  }
 
   return (
     <>
@@ -121,7 +126,7 @@ const Home: NextPage = () => {
           <Rows
             beacons={displayBeacons}
             highlightedAddress={hightlighted}
-            onHighlightAddress={setHighlighted}
+            onHighlightAddress={setHighlightedAndUpdateUrl}
           />
         </VStack>
       </Container>
