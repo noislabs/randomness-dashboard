@@ -22,6 +22,14 @@ interface Props {
   readonly onHighlightAddress: (address: string | null) => void;
 }
 
+function roundsDisplay(rounds: number): string {
+  if (rounds > 3000) {
+    return `${Math.round(rounds / 1000)}k`;
+  } else {
+    return rounds.toString();
+  }
+}
+
 export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): JSX.Element {
   // roundSubmissions is null as long as submissions have not been loaded
   const [roundSubmissions, setRoundSubmissions] = useState<readonly Submission[] | null>(null);
@@ -79,7 +87,7 @@ export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): 
               {(roundSubmissions ?? []).map((submission, index) => {
                 const diff = submissionDiff(submission, beacon);
                 const address = submission.bot;
-                const moniker = botInfos.get(submission.bot)?.moniker;
+                const info = botInfos.get(submission.bot);
                 const color = index < numberOfRewardedSubmissions ? "green" : "gray";
                 const highlighted = address === highlightedAddress;
                 return (
@@ -92,8 +100,14 @@ export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): 
                     onClick={() => onHighlightAddress(highlighted ? null : address)}
                     cursor="pointer"
                   >
-                    {moniker ? <span title={address}>{moniker}</span> : <>{address}</>} (
-                    {diff.toFixed(1)}s)
+                    {info ? (
+                      <span title={address}>
+                        {info.moniker} ({roundsDisplay(info.rounds_added)})
+                      </span>
+                    ) : (
+                      <>{address}</>
+                    )}
+                    : {diff.toFixed(1)}s
                   </Badge>
                 );
               })}

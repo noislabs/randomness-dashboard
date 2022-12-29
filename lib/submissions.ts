@@ -4,6 +4,7 @@ import { VerifiedBeacon } from "./beacons";
 import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
 
 export interface Submission {
+  /** Address of the bot */
   readonly bot: string;
   readonly time: string;
 }
