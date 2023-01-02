@@ -30,7 +30,7 @@ import { useRouter } from "next/router";
 
 import { GlobalContext } from "../lib/GlobalState";
 import { DisplayBeacon, Row } from "../components/Row";
-import { noisOracleAddress, rpcEndpoint } from "../lib/constants";
+import { noisDrandAddress, rpcEndpoint } from "../lib/constants";
 import { Rows } from "../components/Rows";
 
 const Home: NextPage = () => {
@@ -97,8 +97,8 @@ const Home: NextPage = () => {
                   <Input id="rpcEndpoint" value={rpcEndpoint} readOnly={true} />
                 </Box>
                 <Box>
-                  <FormLabel htmlFor="noisOracleAddress">Oracle contract address</FormLabel>
-                  <Input id="noisOracleAddress" value={noisOracleAddress} readOnly={true} />
+                  <FormLabel htmlFor="noisDrandAddress">Drand contract address</FormLabel>
+                  <Input id="noisDrandAddress" value={noisDrandAddress} readOnly={true} />
                 </Box>
               </Stack>
             </DrawerBody>

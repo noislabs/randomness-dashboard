@@ -1,6 +1,6 @@
 import { WasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
-import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
+import { approxDateFromTimestamp, queryDrandWith } from "./drand";
 
 export interface VerifiedBeacon {
   readonly round: number;
@@ -16,7 +16,7 @@ export async function queryBeacons(
   startAfter: number | null,
   itemsPerPage: number,
 ): Promise<VerifiedBeacon[]> {
-  const response: { beacons: Array<any> } = await queryOracleWith(client, {
+  const response: { beacons: Array<any> } = await queryDrandWith(client, {
     beacons_desc: { start_after: startAfter, limit: itemsPerPage },
   });
 
@@ -40,7 +40,7 @@ export async function queryBeacon(
   client: QueryClient & WasmExtension,
   round: number,
 ): Promise<VerifiedBeacon | null> {
-  const response: { beacon: any } = await queryOracleWith(client, { beacon: { round } });
+  const response: { beacon: any } = await queryDrandWith(client, { beacon: { round } });
 
   if (response.beacon) {
     const { round, randomness, published, verified } = response.beacon;

@@ -1,7 +1,7 @@
 import { CosmWasmClient, WasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
 import { VerifiedBeacon } from "./beacons";
-import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
+import { approxDateFromTimestamp, queryDrandWith,  } from "./drand";
 
 export interface Submission {
   /** Address of the bot */
@@ -13,7 +13,7 @@ export async function querySubmissions(
   client: QueryClient & WasmExtension,
   round: number,
 ): Promise<{ submissions: ReadonlyArray<Submission> }> {
-  const response = await queryOracleWith(client, {
+  const response = await queryDrandWith(client, {
     submissions: { round: round },
   });
   return response;
