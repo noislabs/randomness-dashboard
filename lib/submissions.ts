@@ -1,7 +1,7 @@
 import { CosmWasmClient, WasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
 import { VerifiedBeacon } from "./beacons";
-import { approxDateFromTimestamp, queryDrandWith,  } from "./drand";
+import { approxDateFromTimestamp, queryDrandWith } from "./drand";
 
 export interface Submission {
   /** Address of the bot */
