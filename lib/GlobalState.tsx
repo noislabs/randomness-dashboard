@@ -5,7 +5,7 @@ import { assert } from "@cosmjs/utils";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { queryBeacon, queryBeacons, VerifiedBeacon } from "./beacons";
 import { rpcEndpoint } from "./constants";
-import { approxDateFromTimestamp, queryOracleWith } from "./oracle";
+import { approxDateFromTimestamp, queryDrandWith } from "./drand";
 import { querySubmissions } from "./submissions";
 
 interface State {
@@ -219,7 +219,7 @@ export const GlobalProvider = ({ children }: Props) => {
     }
 
     if (queryClient) {
-      const respPromise = queryOracleWith(queryClient, { bot: { address } });
+      const respPromise = queryDrandWith(queryClient, { bot: { address } });
       const respPromiseMapped = respPromise.then((resp): Promise<Bot | null> => {
         assert(typeof resp === "object");
         assert(typeof resp.bot === "object"); // object can be null
