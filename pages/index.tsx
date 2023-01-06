@@ -29,15 +29,16 @@ import { FaInfoCircle } from "react-icons/fa";
 import { useRouter } from "next/router";
 
 import { GlobalContext } from "../lib/GlobalState";
-import { DisplayBeacon, Row } from "../components/Row";
+import { DisplayBeacon } from "../components/Row";
 import { noisDrandAddress, rpcEndpoint } from "../lib/constants";
 import { Rows } from "../components/Rows";
+import { Info } from "../components/Info";
 
 const Home: NextPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [displayBeacons, setBeacons] = useState<DisplayBeacon[]>([]);
-  const { state } = useContext(GlobalContext);
+  const { state, allowList } = useContext(GlobalContext);
   const [hightlighted, setHighlighted] = useState<string | null>(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -84,24 +85,23 @@ const Home: NextPage = () => {
           ref={btnRef}
           onClick={onOpen}
         />
-        <Drawer isOpen={isOpen} placement="right" onClose={onClose} finalFocusRef={btnRef}>
+        <Drawer
+          size="md"
+          isOpen={isOpen}
+          placement="right"
+          onClose={onClose}
+          finalFocusRef={btnRef}
+        >
           <DrawerOverlay />
           <DrawerContent>
             <DrawerCloseButton />
-            <DrawerHeader>Dashboard Info</DrawerHeader>
+            <DrawerHeader>Randomness Info</DrawerHeader>
 
-            <DrawerBody>
-              <Stack spacing="24px">
-                <Box>
-                  <FormLabel htmlFor="rpcEndpoint">RPC endpoint</FormLabel>
-                  <Input id="rpcEndpoint" value={rpcEndpoint} readOnly={true} />
-                </Box>
-                <Box>
-                  <FormLabel htmlFor="noisDrandAddress">Drand contract address</FormLabel>
-                  <Input id="noisDrandAddress" value={noisDrandAddress} readOnly={true} />
-                </Box>
-              </Stack>
-            </DrawerBody>
+            <Info
+              allowList={allowList.join("\n")}
+              rpcEndpoint={rpcEndpoint}
+              drandContractAddress={noisDrandAddress}
+            />
 
             <DrawerFooter>
               <Button variant="outline" mr={3} onClick={onClose}>

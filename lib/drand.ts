@@ -1,6 +1,12 @@
 import { WasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
+
 import { noisDrandAddress } from "./constants";
+
+export async function queryAllowList(client: QueryClient & WasmExtension): Promise<string[]> {
+  const { allowed } = await queryDrandWith(client, { allow_list: {} });
+  return allowed;
+}
 
 export async function queryDrandWith(client: QueryClient & WasmExtension, requestMsg: any) {
   console.log("Sending query:", JSON.stringify(requestMsg));

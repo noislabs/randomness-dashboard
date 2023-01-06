@@ -5,6 +5,7 @@ import { numberOfRewardedSubmissions } from "../lib/constants";
 import { Bot, GlobalContext } from "../lib/GlobalState";
 import { Submission, submissionDiff } from "../lib/submissions";
 import { VerifiedBeacon } from "../lib/beacons";
+import { SubmissionBadge } from "./SubmissionBadge";
 
 export interface MissingBeacon {
   readonly round: number;
@@ -33,7 +34,7 @@ function roundsDisplay(rounds: number): string {
 export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): JSX.Element {
   // roundSubmissions is null as long as submissions have not been loaded
   const [roundSubmissions, setRoundSubmissions] = useState<readonly Submission[] | null>(null);
-  const { submissions, getSubmissions, getBotInfo } = useContext(GlobalContext);
+  const { submissions, getSubmissions, getBotInfo, allowList } = useContext(GlobalContext);
   const [botInfos, setBotInfos] = useState<Map<string, Bot | null>>(new Map());
 
   useEffect(() => {
@@ -87,28 +88,22 @@ export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): 
               {(roundSubmissions ?? []).map((submission, index) => {
                 const diff = submissionDiff(submission, beacon);
                 const address = submission.bot;
-                const info = botInfos.get(submission.bot);
-                const color = index < numberOfRewardedSubmissions ? "green" : "gray";
+                const info = botInfos.get(submission.bot) ?? null;
+                const isRegistered = !!info;
+                const isAllowListed = allowList.includes(address);
+                const isEligable = isRegistered && isAllowListed;
                 const highlighted = address === highlightedAddress;
                 return (
-                  <Badge
-                    key={submission.bot}
-                    marginInlineEnd="1"
-                    variant={highlighted ? "solid" : "outline"}
-                    colorScheme={color}
-                    title={address}
-                    onClick={() => onHighlightAddress(highlighted ? null : address)}
-                    cursor="pointer"
-                  >
-                    {info ? (
-                      <span title={address}>
-                        {info.moniker} ({roundsDisplay(info.rounds_added)})
-                      </span>
-                    ) : (
-                      <>{address}</>
-                    )}
-                    : {diff.toFixed(1)}s
-                  </Badge>
+                  <SubmissionBadge
+                    key={address}
+                    address={address}
+                    diff={diff}
+                    eligable={isEligable}
+                    highlighted={highlighted}
+                    index={index}
+                    info={info}
+                    onClick={(address) => onHighlightAddress(highlighted ? null : address)}
+                  />
                 );
               })}
             </Text>

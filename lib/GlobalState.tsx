@@ -5,7 +5,7 @@ import { assert } from "@cosmjs/utils";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { queryBeacon, queryBeacons, VerifiedBeacon } from "./beacons";
 import { rpcEndpoint } from "./constants";
-import { queryDrandWith } from "./drand";
+import { queryAllowList, queryDrandWith } from "./drand";
 import {
   itemsInitialLoad,
   itemsRefresh,
@@ -38,6 +38,7 @@ interface Context {
   state: State;
   ready: boolean;
   submissions: Map<number, Promise<readonly Submission[]>>;
+  allowList: string[];
   getSubmissions: (round: number) => Promise<readonly Submission[]>;
   getBotInfo: (address: string) => Promise<Bot | null>;
   getBeacon: (round: number) => Promise<VerifiedBeacon | null>;
@@ -49,6 +50,7 @@ export const GlobalContext = createContext<Context>({
   state: initialState,
   ready: false,
   submissions: new Map(),
+  allowList: [],
   getSubmissions: (round) => Promise.resolve([]),
   getBotInfo: (address) => Promise.resolve(null),
   getBeacon: (round) => Promise.resolve(null),
@@ -74,6 +76,7 @@ export const GlobalProvider = ({ children }: Props) => {
   const [submissions, setSubmissions] = useState<Map<number, Promise<readonly Submission[]>>>(
     new Map(),
   );
+  const [allowList, setAllowList] = useState<string[]>([]);
   // A map from address to registered bots. Uses Promises to be able to
   // put pending requersts into a cache and do not send more queries then necessary.
   const [botInfos, setBotInfos] = useState<Map<string, Promise<Bot | null>>>(new Map());
@@ -134,6 +137,9 @@ export const GlobalProvider = ({ children }: Props) => {
 
   useEffect(() => {
     if (!queryClient) return;
+
+    queryAllowList(queryClient).then((listed) => setAllowList(listed));
+
     // Start reload loop after initial load was done
     setTimeout(() => refreshBeacons(queryClient), refreshInterval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -249,6 +255,7 @@ export const GlobalProvider = ({ children }: Props) => {
         state: globalState,
         ready,
         submissions,
+        allowList,
         getSubmissions,
         getBotInfo,
         getBeacon,
