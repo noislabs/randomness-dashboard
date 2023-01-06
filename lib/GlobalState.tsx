@@ -5,7 +5,14 @@ import { assert } from "@cosmjs/utils";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { queryBeacon, queryBeacons, VerifiedBeacon } from "./beacons";
 import { rpcEndpoint } from "./constants";
-import { approxDateFromTimestamp, queryDrandWith } from "./drand";
+import { queryDrandWith } from "./drand";
+import {
+  itemsInitialLoad,
+  itemsRefresh,
+  refreshInterval,
+  reloadSubmissionsAfter1,
+  reloadSubmissionsAfter2,
+} from "./settings";
 import { querySubmissions } from "./submissions";
 
 interface State {
@@ -102,31 +109,33 @@ export const GlobalProvider = ({ children }: Props) => {
     return verifiedBeacons.length;
   }
 
+  // Initial beacon list load
   useEffect(() => {
     if (!queryClient) return;
     if (stopLoadingEnd) return;
+
+    // This assumes as have no gaps, even if we do it does not matter much
+    const beaconsInState = globalState.highest - globalState.lowest + 1;
+    if (beaconsInState >= itemsInitialLoad) return;
+
     loadPage(queryClient, globalState.lowest, 10).then(
       (count) => {
         if (count === 0) setStopLoadingEnd(true);
-        if (globalState.highest - globalState.lowest >= 60) {
-          setStopLoadingEnd(true);
-        }
       },
       (err) => console.error(err),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryClient, globalState.lowest, stopLoadingEnd]);
 
-  function loadTopRecursive(client: QueryClient & WasmExtension) {
-    loadPage(client, null, 10);
-    // Repeat but with small number of items
-    setTimeout(() => loadTopRecursive(client), 9_000);
+  function refreshBeacons(client: QueryClient & WasmExtension) {
+    loadPage(client, null, itemsRefresh);
+    setTimeout(() => refreshBeacons(client), refreshInterval);
   }
 
   useEffect(() => {
     if (!queryClient) return;
     // Start reload loop after initial load was done
-    setTimeout(() => loadTopRecursive(queryClient), 9_000);
+    setTimeout(() => refreshBeacons(queryClient), refreshInterval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryClient]);
 
@@ -177,10 +186,9 @@ export const GlobalProvider = ({ children }: Props) => {
         return resp.submissions;
       });
 
-      // Once resolved, schedule an update in 5 and 20 seconds
       respPromise.then(() => {
-        setTimeout(() => updateSubmissions(round), 5_000);
-        setTimeout(() => updateSubmissions(round), 20_000);
+        setTimeout(() => updateSubmissions(round), reloadSubmissionsAfter1);
+        setTimeout(() => updateSubmissions(round), reloadSubmissionsAfter2);
       });
 
       setSubmissions((current) => {

@@ -1,6 +1,5 @@
-import { CosmWasmClient, WasmExtension } from "@cosmjs/cosmwasm-stargate";
+import { WasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
-import { assert } from "@cosmjs/utils";
 import { noisDrandAddress } from "./constants";
 
 export async function queryDrandWith(client: QueryClient & WasmExtension, requestMsg: any) {

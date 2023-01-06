@@ -1,3 +1,4 @@
+import { maxBeaconRows } from "../lib/settings";
 import { DisplayBeacon, Row } from "./Row";
 
 interface Props {
@@ -6,12 +7,10 @@ interface Props {
   readonly onHighlightAddress: (address: string | null) => void;
 }
 
-const maxRows = 100;
-
 export function Rows({ beacons, highlightedAddress, onHighlightAddress }: Props): JSX.Element {
   return (
     <>
-      {beacons.slice(0, maxRows).map((beacon) => {
+      {beacons.slice(0, maxBeaconRows).map((beacon) => {
         return (
           <Row
             key={beacon.round}
