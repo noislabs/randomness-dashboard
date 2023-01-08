@@ -1,6 +1,6 @@
-import { Badge, Box, Code, Flex, Heading, Spacer, Square, Text, VStack } from "@chakra-ui/react";
+import { Box, Code, Flex, Heading, Link, Spacer, Square, Text, VStack } from "@chakra-ui/react";
 import { useContext, useEffect, useState } from "react";
-import Link from "next/link";
+import NextLink from "next/link";
 import { Bot, GlobalContext } from "../lib/GlobalState";
 import { Submission, submissionDiff } from "../lib/submissions";
 import { VerifiedBeacon } from "../lib/beacons";
@@ -51,18 +51,13 @@ export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roundSubmissions, submissions, getSubmissions, beacon.round]);
 
-  const roundText = `#${beacon.round}`;
-  const split1 = roundText.slice(0, 4);
-  const split2 = roundText.slice(4);
   return (
     <Flex w="100%" alignItems="center" gap="2">
       <Square bg={"transparent"} size="100px" borderRadius="lg">
         <VStack>
-          <Heading size="lg">
-            <Link href={`/rounds/${beacon.round}`}>
-              {split1}
-              <br />
-              {split2}
+          <Heading size="lg" style={{ maxWidth: "2.8em", overflowWrap: "anywhere" }}>
+            <Link as={NextLink} href={`/rounds/${beacon.round}`}>
+              #{beacon.round}
             </Link>
           </Heading>
         </VStack>
