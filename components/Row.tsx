@@ -1,7 +1,6 @@
 import { Badge, Box, Code, Flex, Heading, Spacer, Square, Text, VStack } from "@chakra-ui/react";
 import { useContext, useEffect, useState } from "react";
 import Link from "next/link";
-import { numberOfRewardedSubmissions } from "../lib/constants";
 import { Bot, GlobalContext } from "../lib/GlobalState";
 import { Submission, submissionDiff } from "../lib/submissions";
 import { VerifiedBeacon } from "../lib/beacons";
@@ -21,14 +20,6 @@ interface Props {
   readonly beacon: DisplayBeacon;
   readonly highlightedAddress: string | null;
   readonly onHighlightAddress: (address: string | null) => void;
-}
-
-function roundsDisplay(rounds: number): string {
-  if (rounds > 3000) {
-    return `${Math.round(rounds / 1000)}k`;
-  } else {
-    return rounds.toString();
-  }
 }
 
 export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): JSX.Element {

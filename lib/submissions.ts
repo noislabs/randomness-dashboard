@@ -1,4 +1,4 @@
-import { CosmWasmClient, WasmExtension } from "@cosmjs/cosmwasm-stargate";
+import { WasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
 import { VerifiedBeacon } from "./beacons";
 import { approxDateFromTimestamp, queryDrandWith } from "./drand";

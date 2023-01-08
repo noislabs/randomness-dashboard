@@ -1,4 +1,4 @@
-import { Badge, color } from "@chakra-ui/react";
+import { Badge } from "@chakra-ui/react";
 import { numberOfRewardedSubmissions } from "../lib/constants";
 
 interface Props {

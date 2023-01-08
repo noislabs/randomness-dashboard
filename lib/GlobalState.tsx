@@ -1,4 +1,4 @@
-import { CosmWasmClient, setupWasmExtension, WasmExtension } from "@cosmjs/cosmwasm-stargate";
+import { setupWasmExtension, WasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
 import { Tendermint34Client, HttpBatchClient } from "@cosmjs/tendermint-rpc";
 import { assert } from "@cosmjs/utils";
