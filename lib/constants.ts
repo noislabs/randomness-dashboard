@@ -7,3 +7,8 @@ export const noisDrandAddress = process.env.NEXT_PUBLIC_NOIS_CONTRACT;
 
 assert(process.env.NEXT_PUBLIC_ENDPOINT, "NEXT_PUBLIC_ENDPOINT must be set");
 export const rpcEndpoint = process.env.NEXT_PUBLIC_ENDPOINT;
+
+export function explorerAccount(address: string): string {
+  assert(process.env.NEXT_PUBLIC_EXPLORER_ACCOUNT, "NEXT_PUBLIC_EXPLORER_ACCOUNT must be set");
+  return process.env.NEXT_PUBLIC_EXPLORER_ACCOUNT.replace("{}", address);
+}

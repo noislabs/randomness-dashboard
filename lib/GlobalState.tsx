@@ -41,6 +41,7 @@ interface Context {
   allowList: string[];
   getSubmissions: (round: number) => Promise<readonly Submission[]>;
   getBotInfo: (address: string) => Promise<Bot | null>;
+  getBots: () => Promise<Bot[]>;
   getBeacon: (round: number) => Promise<VerifiedBeacon | null>;
   addBeacons: (beacons: VerifiedBeacon[]) => void;
 }
@@ -53,6 +54,7 @@ export const GlobalContext = createContext<Context>({
   allowList: [],
   getSubmissions: (round) => Promise.resolve([]),
   getBotInfo: (address) => Promise.resolve(null),
+  getBots: () => Promise.resolve([]),
   getBeacon: (round) => Promise.resolve(null),
   addBeacons: () => {},
 });
@@ -249,6 +251,20 @@ export const GlobalProvider = ({ children }: Props) => {
     }
   }
 
+  function getBots(): Promise<Bot[]> {
+    if (queryClient) {
+      const respPromise = queryDrandWith(queryClient, { bots: {} });
+      const respPromiseMapped = respPromise.then((resp): Promise<Bot[]> => {
+        assert(typeof resp === "object");
+        assert(Array.isArray(resp.bots));
+        return resp.bots;
+      });
+      return respPromiseMapped;
+    } else {
+      return Promise.resolve([]);
+    }
+  }
+
   return (
     <GlobalContext.Provider
       value={{
@@ -258,6 +274,7 @@ export const GlobalProvider = ({ children }: Props) => {
         allowList,
         getSubmissions,
         getBotInfo,
+        getBots,
         getBeacon,
         addBeacons,
       }}
