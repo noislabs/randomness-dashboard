@@ -1,5 +1,4 @@
 import {
-  Code,
   Container,
   Heading,
   HStack,
@@ -9,20 +8,16 @@ import {
   Spacer,
   Stack,
   Table,
-  TableCaption,
   TableContainer,
   Tbody,
   Td,
   Text,
-  Tfoot,
   Th,
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { assert } from "@cosmjs/utils";
 import { NextPage } from "next";
 import Head from "next/head";
-import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
 import { FaHome } from "react-icons/fa";
 import NextLink from "next/link";
@@ -53,7 +48,8 @@ const Bots: NextPage = () => {
     getBots()
       .then(
         (bots) => {
-          bots.sort((a, b) => b.rounds_added - a.rounds_added); // sort by rounds added, descending
+          console.log(bots)
+          bots.sort((a, b) => b.reward_points - a.reward_points); // sort by reward points, descending
           setBots(bots);
         },
         (err) => console.error(err),
@@ -96,6 +92,7 @@ const Bots: NextPage = () => {
                   <Th>Moniker</Th>
                   <Th>Address</Th>
                   <Th>Allow&shy;listed</Th>
+                  <Th isNumeric>Points</Th>
                   <Th isNumeric>Beacons added</Th>
                 </Tr>
               </Thead>
@@ -110,6 +107,7 @@ const Bots: NextPage = () => {
                       </Link>
                     </Td>
                     <Td>{allowList.includes(bot.address) ? "✅" : ""}</Td>
+                    <Td>{bot.reward_points}</Td>
                     <Td>{bot.rounds_added}</Td>
                   </Tr>
                 ))}

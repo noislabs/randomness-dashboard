@@ -66,6 +66,7 @@ interface Props {
 export interface Bot {
   readonly moniker: string;
   readonly address: string;
+  readonly reward_points: number;
   readonly rounds_added: number;
 }
 
