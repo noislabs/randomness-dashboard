@@ -12,3 +12,8 @@ export function explorerAccount(address: string): string {
   assert(process.env.NEXT_PUBLIC_EXPLORER_ACCOUNT, "NEXT_PUBLIC_EXPLORER_ACCOUNT must be set");
   return process.env.NEXT_PUBLIC_EXPLORER_ACCOUNT.replace("{}", address);
 }
+
+export function explorerTx(txHash: string): string {
+  assert(process.env.NEXT_PUBLIC_EXPLORER_TX, "NEXT_PUBLIC_EXPLORER_TX must be set");
+  return process.env.NEXT_PUBLIC_EXPLORER_TX.replace("{}", txHash);
+}

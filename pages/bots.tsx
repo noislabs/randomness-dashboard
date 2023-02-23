@@ -24,16 +24,7 @@ import NextLink from "next/link";
 
 import { Bot, GlobalContext } from "../lib/GlobalState";
 import { explorerAccount } from "../lib/constants";
-
-export function ellideMiddle(str: string, maxOutLen: number): string {
-  if (str.length <= maxOutLen) {
-    return str;
-  }
-  const ellide = "…";
-  const frontLen = Math.ceil((maxOutLen - ellide.length) / 2);
-  const tailLen = Math.floor((maxOutLen - ellide.length) / 2);
-  return str.slice(0, frontLen) + ellide + str.slice(str.length - tailLen, str.length);
-}
+import { ellideMiddle } from "../lib/ellide";
 
 const Bots: NextPage = () => {
   const [loading, setLoading] = useState(false);

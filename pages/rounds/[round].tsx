@@ -7,7 +7,15 @@ import {
   Skeleton,
   Spacer,
   Stack,
+  Table,
+  TableContainer,
+  Tbody,
+  Td,
   Text,
+  Th,
+  Thead,
+  Tr,
+  Link,
 } from "@chakra-ui/react";
 import { assert } from "@cosmjs/utils";
 import { NextPage } from "next";
@@ -16,14 +24,19 @@ import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
 import { FaHome } from "react-icons/fa";
 
-import { GlobalContext } from "../../lib/GlobalState";
+import { Bot, GlobalContext } from "../../lib/GlobalState";
 import { VerifiedBeacon } from "../../lib/beacons";
-import Link from "next/link";
+import { Submission, submissionDiff } from "../../lib/submissions";
+import { explorerAccount } from "../../lib/constants";
+import { ellideMiddle } from "../../lib/ellide";
+import { Tx } from "../../components/Tx";
 
 const Round: NextPage = () => {
   const [loading, setLoading] = useState(false);
   const [beacon, setBeacon] = useState<VerifiedBeacon | null | undefined>(undefined);
-  const { ready, getBeacon } = useContext(GlobalContext);
+  const { ready, getBeacon, getSubmissions, getBotInfo, allowList } = useContext(GlobalContext);
+  const [roundSubmissions, setRoundSubmissions] = useState<readonly Submission[] | null>(null);
+  const [botInfos, setBotInfos] = useState<Map<string, Bot | null>>(new Map());
 
   const router = useRouter();
   const { round } = router.query;
@@ -46,6 +59,31 @@ const Round: NextPage = () => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
+
+  useEffect(() => {
+    if (!beacon) return;
+
+    getSubmissions(beacon.round).then(
+      (s) => {
+        const addresses = s.map((sub) => sub.bot);
+        // Load bot infos later
+        setTimeout(() => {
+          (async () => {
+            const infos = await Promise.all(
+              addresses.map(async (address) => {
+                const info = await getBotInfo(address);
+                return [address, info] as const;
+              }),
+            );
+            setBotInfos(new Map(infos));
+          })();
+        });
+        setRoundSubmissions(s);
+      },
+      (err) => console.error(err),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [beacon]);
 
   return (
     <>
@@ -72,13 +110,57 @@ const Round: NextPage = () => {
         <Stack>
           <Heading size="lg">Round #{round}</Heading>
           {beacon ? (
-            <Text>
-              Published: {beacon.published.toUTCString()}
-              <br />
-              Verified: {beacon.verified.toUTCString()} ({beacon.diff.toFixed(1)}s)
-              <br />
-              <Code>{beacon.randomness}</Code>
-            </Text>
+            <>
+              <Text>
+                Published: {beacon.published.toUTCString()}
+                <br />
+                Verified: {beacon.verified.toUTCString()} ({beacon.diff.toFixed(1)}s)
+                <br />
+                <Code>{beacon.randomness}</Code>
+              </Text>
+              <Heading size="md">Submissions ({roundSubmissions?.length ?? "–"})</Heading>
+              <TableContainer>
+                <Table variant="simple">
+                  <Thead>
+                    <Tr>
+                      <Th>#</Th>
+                      <Th>Delay</Th>
+                      <Th>Moniker</Th>
+                      <Th>Address</Th>
+                      <Th>Transaction</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {(roundSubmissions ?? []).map((submission, index) => {
+                      const diff = submissionDiff(submission, beacon);
+                      const address = submission.bot;
+                      const info = botInfos.get(submission.bot) ?? null;
+                      const isRegistered = !!info;
+                      const isAllowListed = allowList.includes(address);
+                      const isEligable = isRegistered && isAllowListed;
+                      return (
+                        <Tr key={address}>
+                          <Td>{index + 1}</Td>
+                          <Td>{diff.toFixed(1)}s</Td> <Td>{info?.moniker}</Td>
+                          <Td>
+                            <Link title={address} href={explorerAccount(address)}>
+                              {ellideMiddle(address, 15)}
+                            </Link>
+                          </Td>
+                          <Td>
+                            <Tx
+                              height={submission.height}
+                              txIndex={submission.tx_index ?? NaN}
+                              maxLen={10}
+                            />
+                          </Td>
+                        </Tr>
+                      );
+                    })}
+                  </Tbody>
+                </Table>
+              </TableContainer>
+            </>
           ) : (
             <Text>Not found</Text>
           )}

@@ -7,6 +7,8 @@ export interface Submission {
   /** Address of the bot */
   readonly bot: string;
   readonly time: string;
+  readonly height: number;
+  readonly tx_index: number | null;
 }
 
 export async function querySubmissions(

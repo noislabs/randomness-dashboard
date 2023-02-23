@@ -2,6 +2,8 @@ import { setupWasmExtension, WasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
 import { Tendermint34Client, HttpBatchClient } from "@cosmjs/tendermint-rpc";
 import { assert } from "@cosmjs/utils";
+import { sha256 } from "@cosmjs/crypto";
+import { toHex } from "@cosmjs/encoding";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { queryBeacon, queryBeacons, VerifiedBeacon } from "./beacons";
 import { rpcEndpoint } from "./constants";
@@ -13,12 +15,16 @@ import {
   reloadSubmissionsAfter1,
   reloadSubmissionsAfter2,
 } from "./settings";
-import { querySubmissions } from "./submissions";
+import { querySubmissions, Submission } from "./submissions";
 
 interface State {
   highest: number;
   lowest: number;
   beacons: Map<number, VerifiedBeacon>;
+}
+
+interface Tx {
+  hash: string;
 }
 
 // The initial state, you can setup any properties initilal values here.
@@ -28,11 +34,6 @@ const initialState: State = {
   lowest: Number.MAX_SAFE_INTEGER,
   beacons: new Map(),
 };
-
-interface Submission {
-  bot: string;
-  time: string;
-}
 
 interface Context {
   state: State;
@@ -44,6 +45,7 @@ interface Context {
   getBots: () => Promise<Bot[]>;
   getBeacon: (round: number) => Promise<VerifiedBeacon | null>;
   addBeacons: (beacons: VerifiedBeacon[]) => void;
+  getTransaction: (height: number, txIndex: number) => Promise<Tx | null>;
 }
 
 // create the context object for delivering your state across your app.
@@ -57,6 +59,7 @@ export const GlobalContext = createContext<Context>({
   getBots: () => Promise.resolve([]),
   getBeacon: (round) => Promise.resolve(null),
   addBeacons: () => {},
+  getTransaction: (height, txIndex) => Promise.resolve(null),
 });
 
 interface Props {
@@ -74,6 +77,7 @@ export interface Bot {
 export const GlobalProvider = ({ children }: Props) => {
   const [globalState, setGlobalState] = useState(initialState);
   // const [client, setClient] = useState<CosmWasmClient | null>(null);
+  const [tmClient, setTmClient] = useState<Tendermint34Client>();
   const [queryClient, setQueryClient] = useState<(QueryClient & WasmExtension) | null>(null);
   const [ready, setReady] = useState(false);
   const [submissions, setSubmissions] = useState<Map<number, Promise<readonly Submission[]>>>(
@@ -95,6 +99,7 @@ export const GlobalProvider = ({ children }: Props) => {
     Tendermint34Client.create(httpBatch).then(
       (tmClient) => {
         const queryClient = QueryClient.withExtensions(tmClient, setupWasmExtension);
+        setTmClient(tmClient);
         setQueryClient(queryClient);
         setReady(true);
       },
@@ -136,6 +141,16 @@ export const GlobalProvider = ({ children }: Props) => {
   function refreshBeacons(client: QueryClient & WasmExtension) {
     loadPage(client, null, itemsRefresh);
     setTimeout(() => refreshBeacons(client), refreshInterval);
+  }
+
+  async function getTransaction(height: number, txIndex: number): Promise<Tx | null> {
+    if (!tmClient) return null;
+    const block = await tmClient.block(height);
+    const tx = block.block.txs[txIndex];
+    const hash = sha256(tx);
+    return {
+      hash: toHex(hash).toUpperCase(),
+    };
   }
 
   useEffect(() => {
@@ -278,6 +293,7 @@ export const GlobalProvider = ({ children }: Props) => {
         getBots,
         getBeacon,
         addBeacons,
+        getTransaction,
       }}
     >
       {children}
