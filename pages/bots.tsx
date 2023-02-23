@@ -48,7 +48,6 @@ const Bots: NextPage = () => {
     getBots()
       .then(
         (bots) => {
-          console.log(bots)
           bots.sort((a, b) => b.reward_points - a.reward_points); // sort by reward points, descending
           setBots(bots);
         },
