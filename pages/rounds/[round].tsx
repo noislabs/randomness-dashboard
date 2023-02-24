@@ -30,6 +30,7 @@ import { Submission, submissionDiff } from "../../lib/submissions";
 import { explorerAccount } from "../../lib/constants";
 import { ellideMiddle } from "../../lib/ellide";
 import { Tx } from "../../components/Tx";
+import { Reward } from "../../components/Reward";
 
 const Round: NextPage = () => {
   const [loading, setLoading] = useState(false);
@@ -119,6 +120,7 @@ const Round: NextPage = () => {
                 <Code>{beacon.randomness}</Code>
               </Text>
               <Heading size="md">Submissions ({roundSubmissions?.length ?? "–"})</Heading>
+
               <TableContainer>
                 <Table variant="simple">
                   <Thead>
@@ -127,6 +129,7 @@ const Round: NextPage = () => {
                       <Th>Delay</Th>
                       <Th>Moniker</Th>
                       <Th>Address</Th>
+                      <Th>Reward</Th>
                       <Th>Transaction</Th>
                     </Tr>
                   </Thead>
@@ -135,23 +138,27 @@ const Round: NextPage = () => {
                       const diff = submissionDiff(submission, beacon);
                       const address = submission.bot;
                       const info = botInfos.get(submission.bot) ?? null;
-                      const isRegistered = !!info;
-                      const isAllowListed = allowList.includes(address);
-                      const isEligable = isRegistered && isAllowListed;
                       return (
                         <Tr key={address}>
                           <Td>{index + 1}</Td>
-                          <Td>{diff.toFixed(1)}s</Td> <Td>{info?.moniker}</Td>
+                          <Td>{diff.toFixed(1)}s</Td>
+                          <Td>{info?.moniker}</Td>
                           <Td>
                             <Link title={address} href={explorerAccount(address)}>
-                              {ellideMiddle(address, 15)}
+                              {ellideMiddle(address, 12)}
                             </Link>
+                          </Td>
+                          <Td>
+                            <Reward
+                              height={submission.height}
+                              txIndex={submission.tx_index ?? NaN}
+                            />
                           </Td>
                           <Td>
                             <Tx
                               height={submission.height}
                               txIndex={submission.tx_index ?? NaN}
-                              maxLen={10}
+                              maxLen={9}
                             />
                           </Td>
                         </Tr>

@@ -1,9 +1,9 @@
 import { setupWasmExtension, WasmExtension } from "@cosmjs/cosmwasm-stargate";
 import { QueryClient } from "@cosmjs/stargate";
-import { Tendermint34Client, HttpBatchClient } from "@cosmjs/tendermint-rpc";
+import { Tendermint34Client, HttpBatchClient, TxData } from "@cosmjs/tendermint-rpc";
 import { assert } from "@cosmjs/utils";
 import { sha256 } from "@cosmjs/crypto";
-import { toHex } from "@cosmjs/encoding";
+import { fromHex, toHex } from "@cosmjs/encoding";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { queryBeacon, queryBeacons, VerifiedBeacon } from "./beacons";
 import { rpcEndpoint } from "./constants";
@@ -45,7 +45,8 @@ interface Context {
   getBots: () => Promise<Bot[]>;
   getBeacon: (round: number) => Promise<VerifiedBeacon | null>;
   addBeacons: (beacons: VerifiedBeacon[]) => void;
-  getTransaction: (height: number, txIndex: number) => Promise<Tx | null>;
+  getTransaction: (height: number, txIndex: number) => Promise<Tx>;
+  getTransactionResult: (txHash: string) => Promise<TxData>;
 }
 
 // create the context object for delivering your state across your app.
@@ -59,7 +60,8 @@ export const GlobalContext = createContext<Context>({
   getBots: () => Promise.resolve([]),
   getBeacon: (round) => Promise.resolve(null),
   addBeacons: () => {},
-  getTransaction: (height, txIndex) => Promise.resolve(null),
+  getTransaction: (height, txIndex) => Promise.reject("Uninitialized GlobalContext"),
+  getTransactionResult: (txHash) => Promise.reject("Uninitialized GlobalContext"),
 });
 
 interface Props {
@@ -143,14 +145,20 @@ export const GlobalProvider = ({ children }: Props) => {
     setTimeout(() => refreshBeacons(client), refreshInterval);
   }
 
-  async function getTransaction(height: number, txIndex: number): Promise<Tx | null> {
-    if (!tmClient) return null;
+  async function getTransaction(height: number, txIndex: number): Promise<Tx> {
+    assert(tmClient);
     const block = await tmClient.block(height);
     const tx = block.block.txs[txIndex];
     const hash = sha256(tx);
     return {
       hash: toHex(hash).toUpperCase(),
     };
+  }
+
+  async function getTransactionResult(txHash: string): Promise<TxData> {
+    assert(tmClient);
+    const { result } = await tmClient.tx({ hash: fromHex(txHash) });
+    return result;
   }
 
   useEffect(() => {
@@ -294,6 +302,7 @@ export const GlobalProvider = ({ children }: Props) => {
         getBeacon,
         addBeacons,
         getTransaction,
+        getTransactionResult,
       }}
     >
       {children}

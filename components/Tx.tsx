@@ -13,7 +13,7 @@ interface Props {
 
 export function Tx({ height, txIndex, maxLen }: Props): JSX.Element {
   const [loading, setLoading] = useState(false);
-  const [hash, setHash] = useState<string>();
+  const [txHash, setTxHash] = useState<string>();
   const { ready, getTransaction } = useContext(GlobalContext);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export function Tx({ height, txIndex, maxLen }: Props): JSX.Element {
 
     getTransaction(height, txIndex)
       .then(
-        (tx) => setHash(tx?.hash),
+        (tx) => setTxHash(tx?.hash),
         (err) => console.error(err),
       )
       .finally(() => setLoading(false));
@@ -32,8 +32,8 @@ export function Tx({ height, txIndex, maxLen }: Props): JSX.Element {
   }, [ready]);
 
   return (
-    <Link title={hash} href={explorerTx(hash ?? "")}>
-      {hash && ellideMiddle(hash, maxLen ?? Number.MAX_SAFE_INTEGER)}
+    <Link title={txHash} href={explorerTx(txHash ?? "")}>
+      {txHash && ellideMiddle(txHash, maxLen ?? Number.MAX_SAFE_INTEGER)}
     </Link>
   );
 }
