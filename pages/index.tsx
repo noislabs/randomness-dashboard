@@ -1,21 +1,14 @@
 import {
-  Avatar,
-  Badge,
-  Box,
   Button,
-  Code,
   Container,
   Drawer,
-  DrawerBody,
   DrawerCloseButton,
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
-  FormLabel,
   HStack,
   IconButton,
-  Input,
   Skeleton,
   Spacer,
   Stack,
@@ -33,6 +26,7 @@ import { DisplayBeacon } from "../components/Row";
 import { noisDrandAddress, rpcEndpoint } from "../lib/constants";
 import { Rows } from "../components/Rows";
 import { Info } from "../components/Info";
+import { isAllowedRound } from "../lib/drand";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -50,10 +44,12 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     let out = new Array<DisplayBeacon>();
-    for (let r = state.highest; r >= state.lowest; r -= 1) {
-      const found = state.beacons.get(r);
+    for (let round = state.highest; round >= state.lowest; round -= 1) {
+      if (!isAllowedRound(round)) continue;
+
+      const found = state.beacons.get(round);
       if (found) out.push(found);
-      else out.push({ round: r });
+      else out.push({ round });
     }
     if (out.length !== 0) setLoading(false);
     setBeacons(out);
