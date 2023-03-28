@@ -32,15 +32,15 @@ const Home: NextPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [displayBeacons, setBeacons] = useState<DisplayBeacon[]>([]);
-  const { state } = useContext(GlobalContext);
+  const { state, initialLoad } = useContext(GlobalContext);
   const [hightlighted, setHighlighted] = useState<string | null>(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = React.useRef(null);
 
   useEffect(() => {
-    setLoading(true);
-  }, []);
+    setLoading(initialLoad);
+  }, [initialLoad]);
 
   useEffect(() => {
     let out = new Array<DisplayBeacon>();
@@ -51,7 +51,6 @@ const Home: NextPage = () => {
       if (found) out.push(found);
       else out.push({ round });
     }
-    if (out.length !== 0) setLoading(false);
     setBeacons(out);
   }, [state]);
 
