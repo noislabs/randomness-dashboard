@@ -16,16 +16,16 @@ import {
   Tbody,
   Link,
 } from "@chakra-ui/react";
+import NextLink from "next/link";
 import { numberOfRewardedSubmissions } from "../lib/constants";
 import { SubmissionBadge } from "./SubmissionBadge";
 
 interface Props {
-  allowList: string;
   rpcEndpoint: string;
   drandContractAddress: string;
 }
 
-export function Info({ allowList, rpcEndpoint, drandContractAddress }: Props): JSX.Element {
+export function Info({ rpcEndpoint, drandContractAddress }: Props): JSX.Element {
   return (
     <DrawerBody>
       <Stack spacing={6}>
@@ -50,9 +50,12 @@ export function Info({ allowList, rpcEndpoint, drandContractAddress }: Props): J
           <Heading size="sm">Allowlist</Heading>
           <Text>
             In order to prevent siblings, a basic allow listing mechanism is used. Bot addresses
-            currently allow listed:
+            currently allow listed as available at{" "}
+            <Link as={NextLink} href="/allowlist">
+              /allowlist
+            </Link>
+            .
           </Text>
-          <Textarea value={allowList} readOnly={true} />
           <Heading size="sm">Legend</Heading>
           <Table variant="simple">
             <Thead>

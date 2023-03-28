@@ -32,7 +32,7 @@ const Home: NextPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [displayBeacons, setBeacons] = useState<DisplayBeacon[]>([]);
-  const { state, allowList } = useContext(GlobalContext);
+  const { state } = useContext(GlobalContext);
   const [hightlighted, setHighlighted] = useState<string | null>(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -93,11 +93,7 @@ const Home: NextPage = () => {
             <DrawerCloseButton />
             <DrawerHeader>Randomness Info</DrawerHeader>
 
-            <Info
-              allowList={allowList.join("\n")}
-              rpcEndpoint={rpcEndpoint}
-              drandContractAddress={noisDrandAddress}
-            />
+            <Info rpcEndpoint={rpcEndpoint} drandContractAddress={noisDrandAddress} />
 
             <DrawerFooter>
               <Button variant="outline" mr={3} onClick={onClose}>
