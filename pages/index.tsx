@@ -30,17 +30,12 @@ import { isAllowedRound } from "../lib/drand";
 
 const Home: NextPage = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [displayBeacons, setBeacons] = useState<DisplayBeacon[]>([]);
-  const { state, initialLoad } = useContext(GlobalContext);
+  const { state, initialBeaconsLoading } = useContext(GlobalContext);
   const [hightlighted, setHighlighted] = useState<string | null>(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = React.useRef(null);
-
-  useEffect(() => {
-    setLoading(initialLoad);
-  }, [initialLoad]);
 
   useEffect(() => {
     let out = new Array<DisplayBeacon>();
@@ -103,7 +98,7 @@ const Home: NextPage = () => {
         </Drawer>
       </HStack>
       <Container maxW="800px" paddingTop="5px" paddingBottom="25px">
-        {loading && (
+        {initialBeaconsLoading && (
           <Stack spacing="25px">
             <Skeleton height="150px" />
             <Skeleton height="150px" />

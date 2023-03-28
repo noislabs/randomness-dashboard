@@ -38,7 +38,7 @@ const initialState: State = {
 interface Context {
   state: State;
   ready: boolean;
-  initialLoad: boolean;
+  initialBeaconsLoading: boolean;
   submissions: Map<number, Promise<readonly Submission[]>>;
   allowList: string[];
   getSubmissions: (round: number) => Promise<readonly Submission[]>;
@@ -54,7 +54,7 @@ interface Context {
 export const GlobalContext = createContext<Context>({
   state: initialState,
   ready: false,
-  initialLoad: false,
+  initialBeaconsLoading: false,
   submissions: new Map(),
   allowList: [],
   getSubmissions: (round) => Promise.resolve([]),
@@ -91,12 +91,11 @@ export const GlobalProvider = ({ children }: Props) => {
   // A map from address to registered bots. Uses Promises to be able to
   // put pending requersts into a cache and do not send more queries then necessary.
   const [botInfos, setBotInfos] = useState<Map<string, Promise<Bot | null>>>(new Map());
-  const [initialLoad, setInitialLoad] = useState<boolean>(false);
+  const [initialBeaconsLoading, setInitialBeaconsLoading] = useState<boolean>(true);
   const [stopLoadingEnd, setStopLoadingEnd] = useState<boolean>(false);
 
   useEffect(() => {
     console.log("Connect client effect");
-    setInitialLoad(true);
     // CosmWasmClient.connect(rpcEndpoint).then(
     //   (c) => setClient(c),
     //   (error) => console.error("Could not connect client", error),
@@ -134,7 +133,7 @@ export const GlobalProvider = ({ children }: Props) => {
     // This assumes as have no gaps, even if we do it does not matter much
     const beaconsInState = Math.floor((globalState.highest - globalState.lowest) / 10) + 1;
     if (beaconsInState >= itemsInitialLoad) {
-      setInitialLoad(false);
+      setInitialBeaconsLoading(false);
       return;
     }
 
@@ -142,7 +141,7 @@ export const GlobalProvider = ({ children }: Props) => {
       (count) => {
         if (count === 0) {
           setStopLoadingEnd(true);
-          setInitialLoad(false);
+          setInitialBeaconsLoading(false);
         }
       },
       (err) => console.error(err),
@@ -304,7 +303,7 @@ export const GlobalProvider = ({ children }: Props) => {
       value={{
         state: globalState,
         ready,
-        initialLoad,
+        initialBeaconsLoading,
         submissions,
         allowList,
         getSubmissions,
