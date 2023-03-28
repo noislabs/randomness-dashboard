@@ -133,7 +133,10 @@ export const GlobalProvider = ({ children }: Props) => {
 
     // This assumes as have no gaps, even if we do it does not matter much
     const beaconsInState = Math.floor((globalState.highest - globalState.lowest) / 10) + 1;
-    if (beaconsInState >= itemsInitialLoad) return;
+    if (beaconsInState >= itemsInitialLoad) {
+      setInitialLoad(false);
+      return;
+    }
 
     loadPage(queryClient, globalState.lowest, 10).then(
       (count) => {
