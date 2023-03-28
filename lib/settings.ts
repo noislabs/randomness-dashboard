@@ -7,5 +7,5 @@ export const reloadSubmissionsAfter2 = 20_000;
 
 export const itemsRefresh = 10;
 export const itemsPerPage = 10;
-export const itemsInitialLoad = 20;
+export const itemsInitialLoad = 2 * itemsPerPage;
 export const refreshInterval = 9_000;

@@ -116,7 +116,7 @@ export const GlobalProvider = ({ children }: Props) => {
     startAfter: null | number,
     itemsPerPage: number,
   ): Promise<number> {
-    console.log(`Running loadPage(${startAfter}, ${itemsPerPage}) ...`);
+    console.log(`Running loadPage(startAfter: ${startAfter}, itemsPerPage: ${itemsPerPage}) ...`);
     const verifiedBeacons = await queryBeacons(client, startAfter, itemsPerPage);
     addBeacons(verifiedBeacons);
     return verifiedBeacons.length;
@@ -128,7 +128,7 @@ export const GlobalProvider = ({ children }: Props) => {
     if (stopLoadingEnd) return;
 
     // This assumes as have no gaps, even if we do it does not matter much
-    const beaconsInState = globalState.highest - globalState.lowest + 1;
+    const beaconsInState = Math.floor((globalState.highest - globalState.lowest) / 10) + 1;
     if (beaconsInState >= itemsInitialLoad) return;
 
     loadPage(queryClient, globalState.lowest, 10).then(
