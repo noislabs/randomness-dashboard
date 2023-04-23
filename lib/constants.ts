@@ -1,6 +1,8 @@
 import { assert } from "@cosmjs/utils";
 
 export const numberOfRewardedSubmissions = 6;
+export const incentivePrice=0.003;
+export const submissionCost=0.03;
 
 assert(process.env.NEXT_PUBLIC_NOIS_CONTRACT, "NEXT_PUBLIC_NOIS_CONTRACT must be set");
 export const noisDrandAddress = process.env.NEXT_PUBLIC_NOIS_CONTRACT;
