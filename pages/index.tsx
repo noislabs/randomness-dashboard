@@ -26,7 +26,7 @@ import { DisplayBeacon } from "../components/Row";
 import { noisDrandAddress, rpcEndpoint } from "../lib/constants";
 import { Rows } from "../components/Rows";
 import { Info } from "../components/Info";
-import { isAllowedRound } from "../lib/drand";
+import { isExpectedRound } from "../lib/drand";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -40,11 +40,13 @@ const Home: NextPage = () => {
   useEffect(() => {
     let out = new Array<DisplayBeacon>();
     for (let round = state.highest; round >= state.lowest; round -= 1) {
-      if (!isAllowedRound(round)) continue;
-
       const found = state.beacons.get(round);
-      if (found) out.push(found);
-      else out.push({ round });
+      if (found) {
+        out.push(found);
+      } else {
+        // Create missing beacon element
+        if (isExpectedRound(round)) out.push({ round });
+      }
     }
     setBeacons(out);
   }, [state]);

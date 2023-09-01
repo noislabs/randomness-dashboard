@@ -18,7 +18,7 @@ export function approxDateFromTimestamp(time: string): Date {
   return new Date(Number(BigInt(time) / BigInt(1_000_000)));
 }
 
-/** Returns true if this round is allowed for the nois-drand contract */
-export function isAllowedRound(round: number) {
+/** Returns true if this round is expected to have submission */
+export function isExpectedRound(round: number) {
   return round % 10 === 0;
 }
