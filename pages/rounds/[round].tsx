@@ -48,7 +48,9 @@ const Round: NextPage = () => {
 
     setLoading(true);
 
-    const numRound = parseInt(round ?? "0", 10);
+    if (!round) return; // come back with a proper round value
+
+    const numRound = parseInt(round, 10);
     getBeacon(numRound)
       .then(
         (beacon) => {
@@ -59,7 +61,7 @@ const Round: NextPage = () => {
       .finally(() => setLoading(false));
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready]);
+  }, [ready, round]);
 
   useEffect(() => {
     if (!beacon) return;
