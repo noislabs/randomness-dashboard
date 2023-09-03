@@ -7,7 +7,7 @@ import { fromHex, toHex } from "@cosmjs/encoding";
 import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { queryBeacon, queryBeacons, VerifiedBeacon } from "./beacons";
 import { rpcEndpoint } from "./constants";
-import { queryAllowList, queryDrandWith } from "./drand";
+import { queryAllowlist, queryDrandWith } from "./drand";
 import {
   itemsInitialLoad,
   itemsRefresh,
@@ -40,7 +40,7 @@ interface Context {
   ready: boolean;
   initialBeaconsLoading: boolean;
   submissions: Map<number, Promise<readonly Submission[]>>;
-  allowList: string[];
+  allowlist: string[];
   getSubmissions: (round: number) => Promise<readonly Submission[]>;
   getBotInfo: (address: string) => Promise<Bot | null>;
   getBots: () => Promise<Bot[]>;
@@ -56,7 +56,7 @@ export const GlobalContext = createContext<Context>({
   ready: false,
   initialBeaconsLoading: false,
   submissions: new Map(),
-  allowList: [],
+  allowlist: [],
   getSubmissions: (round) => Promise.resolve([]),
   getBotInfo: (address) => Promise.resolve(null),
   getBots: () => Promise.resolve([]),
@@ -87,7 +87,7 @@ export const GlobalProvider = ({ children }: Props) => {
   const [submissions, setSubmissions] = useState<Map<number, Promise<readonly Submission[]>>>(
     new Map(),
   );
-  const [allowList, setAllowList] = useState<string[]>([]);
+  const [allowlist, setAllowlist] = useState<string[]>([]);
   // A map from address to registered bots. Uses Promises to be able to
   // put pending requersts into a cache and do not send more queries then necessary.
   const [botInfos, setBotInfos] = useState<Map<string, Promise<Bot | null>>>(new Map());
@@ -173,7 +173,7 @@ export const GlobalProvider = ({ children }: Props) => {
   useEffect(() => {
     if (!queryClient) return;
 
-    queryAllowList(queryClient).then((listed) => setAllowList(listed));
+    queryAllowlist(queryClient).then((listed) => setAllowlist(listed));
 
     // Start reload loop after initial load was done
     setTimeout(() => refreshBeacons(queryClient), refreshInterval);
@@ -305,7 +305,7 @@ export const GlobalProvider = ({ children }: Props) => {
         ready,
         initialBeaconsLoading,
         submissions,
-        allowList,
+        allowlist,
         getSubmissions,
         getBotInfo,
         getBots,

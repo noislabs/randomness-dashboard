@@ -3,8 +3,8 @@ import { QueryClient } from "@cosmjs/stargate";
 
 import { noisDrandAddress } from "./constants";
 
-export async function queryAllowList(client: QueryClient & WasmExtension): Promise<string[]> {
-  const { allowed } = await queryDrandWith(client, { allow_list: {} });
+export async function queryAllowlist(client: QueryClient & WasmExtension): Promise<string[]> {
+  const { allowed } = await queryDrandWith(client, { allowlist: {} });
   return allowed;
 }
 

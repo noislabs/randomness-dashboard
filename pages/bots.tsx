@@ -28,7 +28,7 @@ import { ellideMiddle } from "../lib/ellide";
 
 const Bots: NextPage = () => {
   const [loading, setLoading] = useState(false);
-  const { ready, getBots, allowList } = useContext(GlobalContext);
+  const { ready, getBots, allowlist } = useContext(GlobalContext);
   const [bots, setBots] = useState<Bot[]>([]);
 
   useEffect(() => {
@@ -96,7 +96,7 @@ const Bots: NextPage = () => {
                         {ellideMiddle(bot.address, 15)}
                       </Link>
                     </Td>
-                    <Td>{allowList.includes(bot.address) ? "✅" : ""}</Td>
+                    <Td>{allowlist.includes(bot.address) ? "✅" : ""}</Td>
                     <Td>{bot.reward_points}</Td>
                     <Td>{bot.rounds_added}</Td>
                   </Tr>

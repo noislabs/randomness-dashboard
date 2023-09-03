@@ -35,7 +35,7 @@ import { Reward } from "../../components/Reward";
 const Round: NextPage = () => {
   const [loading, setLoading] = useState(false);
   const [beacon, setBeacon] = useState<VerifiedBeacon | null | undefined>(undefined);
-  const { ready, getBeacon, getSubmissions, getBotInfo, allowList } = useContext(GlobalContext);
+  const { ready, getBeacon, getSubmissions, getBotInfo } = useContext(GlobalContext);
   const [roundSubmissions, setRoundSubmissions] = useState<readonly Submission[] | null>(null);
   const [botInfos, setBotInfos] = useState<Map<string, Bot | null>>(new Map());
 

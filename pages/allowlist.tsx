@@ -27,7 +27,7 @@ import { explorerAccount } from "../lib/constants";
 
 const Allowlist: NextPage = () => {
   const [loading, setLoading] = useState(false);
-  const { ready, getBots, allowList } = useContext(GlobalContext);
+  const { ready, getBots, allowlist } = useContext(GlobalContext);
   const [bots, setBots] = useState<Bot[]>([]);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ const Allowlist: NextPage = () => {
                 </Tr>
               </Thead>
               <Tbody>
-                {allowList.map((address, index) => (
+                {allowlist.map((address, index) => (
                   <Tr key={address}>
                     <Td>{index + 1}</Td>
                     <Td>

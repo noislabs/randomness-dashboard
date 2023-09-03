@@ -25,7 +25,7 @@ interface Props {
 export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): JSX.Element {
   // roundSubmissions is null as long as submissions have not been loaded
   const [roundSubmissions, setRoundSubmissions] = useState<readonly Submission[] | null>(null);
-  const { submissions, getSubmissions, getBotInfo, allowList } = useContext(GlobalContext);
+  const { submissions, getSubmissions, getBotInfo, allowlist } = useContext(GlobalContext);
   const [botInfos, setBotInfos] = useState<Map<string, Bot | null>>(new Map());
 
   useEffect(() => {
@@ -76,8 +76,8 @@ export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): 
                 const address = submission.bot;
                 const info = botInfos.get(submission.bot) ?? null;
                 const isRegistered = !!info;
-                const isAllowListed = allowList.includes(address);
-                const isEligable = isRegistered && isAllowListed;
+                const isAllowlisted = allowlist.includes(address);
+                const isEligable = isRegistered && isAllowlisted;
                 const highlighted = address === highlightedAddress;
                 return (
                   <SubmissionBadge
