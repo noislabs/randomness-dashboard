@@ -22,15 +22,14 @@ import { FaInfoCircle } from "react-icons/fa";
 import { useRouter } from "next/router";
 
 import { GlobalContext } from "../lib/GlobalState";
-import { DisplayBeacon } from "../components/Row";
 import { noisDrandAddress, rpcEndpoint } from "../lib/constants";
 import { Rows } from "../components/Rows";
 import { Info } from "../components/Info";
-import { isExpectedRound } from "../lib/drand";
+import { VerifiedBeacon } from "../lib/beacons";
 
 const Home: NextPage = () => {
   const router = useRouter();
-  const [displayBeacons, setBeacons] = useState<DisplayBeacon[]>([]);
+  const [displayBeacons, setBeacons] = useState<VerifiedBeacon[]>([]);
   const { state, initialBeaconsLoading } = useContext(GlobalContext);
   const [hightlighted, setHighlighted] = useState<string | null>(null);
 
@@ -38,14 +37,11 @@ const Home: NextPage = () => {
   const btnRef = React.useRef(null);
 
   useEffect(() => {
-    let out = new Array<DisplayBeacon>();
+    let out = new Array<VerifiedBeacon>();
     for (let round = state.highest; round >= state.lowest; round -= 1) {
       const found = state.beacons.get(round);
       if (found) {
         out.push(found);
-      } else {
-        // Create missing beacon element
-        if (isExpectedRound(round)) out.push({ round });
       }
     }
     setBeacons(out);

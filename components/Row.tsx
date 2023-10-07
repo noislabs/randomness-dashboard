@@ -6,18 +6,8 @@ import { Submission, submissionDiff } from "../lib/submissions";
 import { VerifiedBeacon } from "../lib/beacons";
 import { SubmissionBadge } from "./SubmissionBadge";
 
-export interface MissingBeacon {
-  readonly round: number;
-}
-
-export type DisplayBeacon = VerifiedBeacon | MissingBeacon;
-
-export function isVerifiedBeacon(beacon: DisplayBeacon): beacon is VerifiedBeacon {
-  return typeof (beacon as VerifiedBeacon).diff === "number";
-}
-
 interface Props {
-  readonly beacon: DisplayBeacon;
+  readonly beacon: VerifiedBeacon;
   readonly highlightedAddress: string | null;
   readonly onHighlightAddress: (address: string | null) => void;
 }
@@ -63,40 +53,33 @@ export function Row({ beacon, highlightedAddress, onHighlightAddress }: Props): 
         </VStack>
       </Square>
       <Box marginLeft="0.5em">
-        {isVerifiedBeacon(beacon) ? (
-          <>
-            <Text marginBottom="0.5em">
-              Randomness published at {beacon.published.toUTCString()}:{" "}
-              <Code>{beacon.randomness}</Code>
-            </Text>
-            <Text>
-              Submissions ({roundSubmissions?.length ?? "–"}):{" "}
-              {(roundSubmissions ?? []).map((submission, index) => {
-                const diff = submissionDiff(submission, beacon);
-                const address = submission.bot;
-                const info = botInfos.get(submission.bot) ?? null;
-                const isRegistered = !!info;
-                const isAllowlisted = allowlist.includes(address);
-                const isEligable = isRegistered && isAllowlisted;
-                const highlighted = address === highlightedAddress;
-                return (
-                  <SubmissionBadge
-                    key={address}
-                    address={address}
-                    diff={diff}
-                    eligable={isEligable}
-                    highlighted={highlighted}
-                    index={index}
-                    info={info}
-                    onClick={(address) => onHighlightAddress(highlighted ? null : address)}
-                  />
-                );
-              })}
-            </Text>
-          </>
-        ) : (
-          <Text>missing!</Text>
-        )}
+        <Text marginBottom="0.5em">
+          Randomness published at {beacon.published.toUTCString()}: <Code>{beacon.randomness}</Code>
+        </Text>
+        <Text>
+          Submissions ({roundSubmissions?.length ?? "–"}):{" "}
+          {(roundSubmissions ?? []).map((submission, index) => {
+            const diff = submissionDiff(submission, beacon);
+            const address = submission.bot;
+            const info = botInfos.get(submission.bot) ?? null;
+            const isRegistered = !!info;
+            const isAllowlisted = allowlist.includes(address);
+            const isEligable = isRegistered && isAllowlisted;
+            const highlighted = address === highlightedAddress;
+            return (
+              <SubmissionBadge
+                key={address}
+                address={address}
+                diff={diff}
+                eligable={isEligable}
+                highlighted={highlighted}
+                index={index}
+                info={info}
+                onClick={(address) => onHighlightAddress(highlighted ? null : address)}
+              />
+            );
+          })}
+        </Text>
       </Box>
       <Spacer />
     </Flex>

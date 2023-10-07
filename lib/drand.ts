@@ -17,8 +17,3 @@ export function approxDateFromTimestamp(time: string): Date {
   // Nanoseconds to milliseconds
   return new Date(Number(BigInt(time) / BigInt(1_000_000)));
 }
-
-/** Returns true if this round is expected to have submission */
-export function isExpectedRound(round: number) {
-  return round % 10 === 0;
-}
