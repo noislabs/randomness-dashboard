@@ -1,9 +1,10 @@
 import { Text } from "@chakra-ui/react";
 import { maxBeaconRows } from "../lib/settings";
-import { DisplayBeacon, Row } from "./Row";
+import { VerifiedBeacon } from "../lib/beacons";
+import { Row } from "./Row";
 
 interface Props {
-  readonly beacons: DisplayBeacon[];
+  readonly beacons: VerifiedBeacon[];
   readonly highlightedAddress: string | null;
   readonly onHighlightAddress: (address: string | null) => void;
 }
