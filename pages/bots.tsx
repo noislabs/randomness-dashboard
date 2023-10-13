@@ -23,7 +23,7 @@ import { FaHome } from "react-icons/fa";
 import NextLink from "next/link";
 
 import { Bot, GlobalContext } from "../lib/GlobalState";
-import { explorerAccount } from "../lib/constants";
+import { explorerAccount, incentivePrice, submissionCost } from "../lib/constants";
 import { ellideMiddle } from "../lib/ellide";
 
 const Bots: NextPage = () => {
@@ -60,9 +60,10 @@ const Bots: NextPage = () => {
         </NextLink>
         <Spacer />
       </HStack>
-      <Container maxW="800px" paddingTop="5px" paddingBottom="25px">
+      <Container maxW="1000px" paddingTop="5px" paddingBottom="25px">
         {loading && (
           <Stack spacing="25px">
+            <Skeleton height="150px" />
             <Skeleton height="150px" />
             <Skeleton height="150px" />
             <Skeleton height="150px" />
@@ -84,6 +85,7 @@ const Bots: NextPage = () => {
                   <Th>Allow&shy;listed</Th>
                   <Th isNumeric>Points</Th>
                   <Th isNumeric>Beacons added</Th>
+                  <Th isNumeric>Profit ($NOIS)</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -99,6 +101,7 @@ const Bots: NextPage = () => {
                     <Td>{allowlist.includes(bot.address) ? "✅" : ""}</Td>
                     <Td>{bot.reward_points}</Td>
                     <Td>{bot.rounds_added}</Td>
+                    <Td>{((bot.reward_points*incentivePrice)-(bot.rounds_added*submissionCost)).toFixed(2)}</Td>
                   </Tr>
                 ))}
               </Tbody>
